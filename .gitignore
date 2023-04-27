@@ -1,0 +1,13 @@
+*.log
+.DS_Store
+node_modules
+.cache
+dist
+.parcel-cache
+coverage
+.idea
+package-lock.
+.vercel
+.env
+build
+yarn.lock

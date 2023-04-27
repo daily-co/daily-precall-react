@@ -1,0 +1,11 @@
+{
+  "private": true,
+	"workspaces": [
+		"daily-precall-react",
+		"daily-precall-ui"
+	],
+  "scripts": {
+    "watch-lib": "yarn workspace @daily-co/daily-precall-react watch",
+    "watch-ui": "yarn workspace daily-precall-ui watch"
+  }
+}
