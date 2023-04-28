@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.44.0",
-    "@daily-co/daily-react": "^0.7.3",
     "@types/uuid": "^9.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

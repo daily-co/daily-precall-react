@@ -1,5 +1,5 @@
 {
-  "name": "daily-react-ui",
+  "name": "daily-precall-starterkit",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@daily-co/daily-precall-react": "*",
+    "@daily-co/daily-react": "^0.7.3",
+    "@types/react-transition-group": "^4.4.5",
     "react": "^18.2.0",
+    "react-animated-css": "^1.2.1",
     "react-dom": "^18.2.0",
-    "@daily-co/daily-precall-react": "*"
+    "react-transition-group": "^4.4.5"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",

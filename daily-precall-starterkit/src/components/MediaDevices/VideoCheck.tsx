@@ -1,0 +1,181 @@
+import React, { useEffect, useRef, useState } from 'react';
+import {
+	useVideoTrack,
+	useDevices,
+	useLocalParticipant,
+} from '@daily-co/daily-react';
+
+import { Button } from '../shared/Button/Button.tsx';
+import { Card } from '../shared/Card/Card.tsx';
+import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting.tsx';
+import { useTabs } from '../../hooks/useUiState.tsx';
+import { Loader } from '../shared/Loader/Loader.tsx';
+
+export const VideoCheck: React.FC = () => {
+	const localParticipantId = useLocalParticipant();
+
+	const videoTrack = useVideoTrack(
+		localParticipantId ? localParticipantId.session_id : '',
+	);
+	const videoElement = useRef<HTMLVideoElement>(null);
+	const [showTroubleshooting, setShowTroubleshooting] = useState(false);
+
+	const { cameras, setCamera, hasCamError, camState } = useDevices();
+	const { switchTabs } = useTabs();
+
+	useEffect(() => {
+		if (!videoTrack.persistentTrack) return;
+		if (videoElement.current) {
+			videoElement.current.srcObject =
+				videoTrack.persistentTrack &&
+				new MediaStream([videoTrack?.persistentTrack]);
+		}
+	}, [videoTrack.persistentTrack]);
+
+	const updateCamera = (ev: React.ChangeEvent<HTMLSelectElement>) => {
+		setCamera(ev.target.value);
+	};
+
+	const showTroubleShootingToggle = () => {
+		if (showTroubleshooting) {
+			setShowTroubleshooting(false);
+		} else {
+			setShowTroubleshooting(true);
+		}
+	};
+
+	return (
+		<Card title="Camera">
+			<h2>Can you see yourself?</h2>
+			{!hasCamError && (
+				<div>
+					<Button role="submit" onClick={() => switchTabs('speaker-check')}>
+						Yes
+					</Button>
+					<Button role="submit" onClick={showTroubleShootingToggle}>
+						No
+					</Button>
+				</div>
+			)}
+			<Button
+				role="submit"
+				variant="ghost"
+				onClick={() => switchTabs('speaker-check')}>
+				I can’t see the screen due to a visual impairment
+			</Button>
+
+			{/* The "Blocked", "in-use", and "not-found" errors are the most common user-related errors.
+					How to handle them differs per browser: the recovery path for a blocked camera is slightly different
+					on Firefox than it is in Chrome. Distinguishing between mobile and desktop devices is also key.*/}
+			{hasCamError && (
+				<TroubleShooting
+					show={true}
+					skipStep={() => switchTabs('speaker-check')}>
+					<h3>We have detected a camera error.</h3>
+					{camState === 'blocked' && (
+						<div className="camera-error camera-error--blocked">
+							<p>Your browser needs camera access.</p>
+							<ol className="ordered-list">
+								<li>
+									Click the camera icon in your browser&apos;s address bar
+								</li>
+								<li>Select “Always allow”, then click “Done”</li>
+								<li>Refresh the page to try again</li>
+							</ol>
+						</div>
+					)}
+					{camState === 'in-use' && (
+						<div className="camera-error camera-error--in-use">
+							<p>Another app is using your camera.</p>
+							<p>
+								We cannot access your camera. Close any apps (like Zoom or
+								Teams) that might be using your camera, then refresh the page.
+							</p>
+						</div>
+					)}
+					{camState === 'not-found' && (
+						<div className="camera-error camera-error--not-found">
+							<p>No camera detected.</p>
+							<p>
+								Unable to detect a camera. No one can see you. Please try
+								connecting a camera, then reload this page.
+							</p>
+						</div>
+					)}
+					{camState === 'constraints-none-specified' ||
+						(camState === 'constraints-invalid' && (
+							// `getUserMedia()` was provided with either invalid constraints
+							// or empty constraints.
+							<p>Try reloading the page.</p>
+						))}
+					{camState === 'undefined-mediadevices' && (
+						// This indicates that `window.navigator.mediaDevices`
+						// is undefined and a `getUserMedia()` call is not possible. This most commonly
+						// is a result of accessing the call via a non-secure `http` url.
+						<p>Are you sure you are on a secure website?</p>
+					)}
+					{camState === 'unknown' && (
+						// While we have done our best to handle and normalize all possible
+						// errors across browsers and common device issues, we were unable to categorize
+						// this error. All unknown errors will be reported as this type. The original
+						// error thrown by `getUserMedia()` will be included in the `msg` string.
+						<p>Unknown error. Try reloading the page.</p>
+					)}
+				</TroubleShooting>
+			)}
+
+			<TroubleShooting
+				show={showTroubleshooting && !hasCamError}
+				skipStep={() => switchTabs('speaker-check')}>
+				{!hasCamError && (
+					<h3>We have not detected any errors with your camera.</h3>
+				)}
+				<p>
+					Have you connected a web camera to a laptop? Try picking a different
+					camera in the drop down list below.
+				</p>
+
+				<p>If this did not solve the problem, try the following:</p>
+
+				<ul>
+					<li>
+						Close other programs that might be using the camera, e.g. Skype.
+					</li>
+					<li>
+						Restart your browser (e.g. Chrome, Firefox, Microsoft Edge, Safari).
+					</li>
+					<li>Restart your computer</li>
+				</ul>
+			</TroubleShooting>
+
+			{/*This means the camera is still loading: it can sometimes take a second to fetch a user's devices.*/}
+			{camState !== 'granted' && !hasCamError ? (
+				<Loader />
+			) : (
+				<div className="videoElement">
+					{videoTrack.persistentTrack && (
+						<video autoPlay muted playsInline ref={videoElement} />
+					)}
+				</div>
+			)}
+
+			{cameras.length > 0 && (
+				<form>
+					<label htmlFor="cameraOptions">Camera:</label>
+					<select
+						name="cameraOptions"
+						id="cameraSelect"
+						onChange={updateCamera}>
+						{cameras?.map((camera) => (
+							<option
+								key={`cam-${camera.device.deviceId}`}
+								value={camera.device.deviceId}>
+								{camera.device.label}
+							</option>
+						))}
+					</select>
+				</form>
+			)}
+		</Card>
+	);
+};

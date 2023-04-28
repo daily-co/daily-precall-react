@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+import { AudioAnalyser } from './AudioAnalyser';
 
 interface Props {
-	analyser: any;
+	analyser: AudioAnalyser;
 }
 
 export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
@@ -11,25 +12,22 @@ export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
+		if (!canvasRef.current) return;
+		if (!containerRef.current) return;
+
 		const canvas = canvasRef.current;
 		const container = containerRef.current;
-		const canvasContainerRect = container?.getBoundingClientRect();
-		const canvasContext = canvas?.getContext('2d');
+		const canvasContainerRect = container.getBoundingClientRect();
+		const canvasContext = canvas.getContext('2d');
 
-		// @ts-ignore
-		canvas.width = canvasContainerRect?.width
-		// @ts-ignore
-		canvas.height = canvasContainerRect?.height
-
-		const primary = '#3DB8B8';
-		const primaryWithContrast = '#3DB8B8';
+		canvas.width = canvasContainerRect.width;
+		canvas.height = canvasContainerRect.height;
 
 		const clearCanvas = () => {
-			// @ts-ignore
-			canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+			canvasContext?.clearRect(0, 0, canvas.width, canvas.height);
 		};
 
-		const draw = (fillColor: any, strokeColor: any) => {
+		const draw = (fillColor: string) => {
 			const dataArray = analyser.getByteFrequencyData();
 			const interestingFrequenciesBucket = dataArray.slice(
 				16,
@@ -39,22 +37,19 @@ export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
 			if (!canvasContext) {
 				return;
 			}
-			canvasContext.lineWidth = 2;
-			canvasContext.strokeStyle = primary;
-			canvasContext.fillStyle = primaryWithContrast;
+
+			canvasContext.fillStyle = fillColor;
 
 			canvasContext.beginPath();
 
-			let x = 0;
-
 			const bufferLength = interestingFrequenciesBucket.length;
-			// @ts-ignore
 			const sliceWidth = canvas.width / bufferLength;
 
 			canvasContext.moveTo(0, 0);
+
+			let x = 0;
 			for (let i = 0; i < bufferLength; i++) {
 				const v = interestingFrequenciesBucket[i] / 128;
-				// @ts-ignore
 				const y = (v * canvas.height) / 2;
 
 				canvasContext.lineTo(x, y);
@@ -62,26 +57,32 @@ export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
 				x += sliceWidth;
 			}
 
-			// @ts-ignore
 			canvasContext.lineTo(canvas.width, 0);
-
 			canvasContext.fill();
-			canvasContext.stroke();
 
 			requestAnimationFrame(() => {
 				clearCanvas();
-				draw(fillColor, strokeColor);
+				draw(fillColor);
 			});
 		};
 
-		draw(primary, primaryWithContrast);
+		draw('rgba(27, 235, 185, 0.5)');
 	}, [analyser]);
 
 	return (
-		<div ref={containerRef} style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+		<div
+			ref={containerRef}
+			style={{
+				width: '300px',
+				height: '200px',
+				marginBottom: '1rem',
+			}}>
 			<canvas
 				ref={canvasRef}
-				style={{ transform: 'rotateX(180deg) translateZ(-1px)' }}
+				style={{
+					transform: 'rotateX(180deg)',
+					borderTop: '2px solid rgba(27, 235, 185)',
+				}}
 			/>
 		</div>
 	);

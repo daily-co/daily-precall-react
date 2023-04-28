@@ -1,0 +1,115 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+}
+
+:root {
+	--accent: 27, 235, 185;
+	--dark-accent: 43, 63, 86;
+	--grey: 245, 245, 245;
+	--dark-grey: 18, 26, 36;
+	--mid-grey: 206, 206, 206;
+	--h1-base: 1.3rem;
+	--h2-base: 1.15rem;
+	--h3-base: 1.05rem;
+}
+
+body {
+	background: rgba(var(--grey));
+	line-height: 1.5;
+	font-size: 1rem;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+	padding: 5vh clamp(1rem, 5vw, 3rem) 5vh;
+	font-family: system-ui, sans-serif;
+	color: rgba(var(--dark-grey));
+}
+
+body > * {
+	--layout-spacing: max(2vh, 1rem);
+	--max-width: 90ch;
+	width: min(100%, var(--max-width));
+	margin-left: auto;
+	margin-right: auto;
+}
+
+main {
+	margin-top: var(--layout-spacing);
+	margin-bottom: var(--layout-spacing);
+}
+
+:is(h1, h2, h3) {
+	line-height: 1.2;
+}
+
+p {
+	margin: 0 0 1rem 0;
+}
+
+h1,
+.h1 {
+	--font-size-base: var(--h1-base);
+	font-weight: normal;
+	--font-size-fluid: 1cqi;
+}
+
+h2,
+.h2 {
+	--font-size-base: var(--h2-base);
+	font-weight: normal;
+	--font-size-fluid: 0.5cqi;
+}
+
+h3,
+.h3 {
+	--font-size-base: var(--h3-base);
+	font-weight: normal;
+	--font-size-fluid: 0.25cqi;
+}
+
+:is(h1, .h1, h2, .h2, h3, .h3) {
+	font-size: calc(var(--font-size-base) + var(--font-size-fluid, 2cqi));
+}
+
+button,
+input,
+select {
+	font-family: system-ui, sans-serif;
+}
+
+select {
+	border: 1px solid rgba(var(--mid-grey), .5);
+	border-radius: 0.25em;
+	padding: 0.25em 0.5em;
+}
+
+form {
+	margin: 1rem;
+}
+
+form label {
+	margin: 0 .5rem 0 0;
+	font-size: .8rem;
+}
+
+.app {
+	background: white;
+	display: grid;
+	place-content: center;
+	padding: clamp(1rem, 5vw, 3rem);
+	border-radius: 4px;
+}
+
+nav {
+	display: flex;
+	gap: 6px;
+	flex-flow: wrap;
+	justify-content: space-around;
+}
+
+hr {
+	border: 2px solid rgba(var(--accent), .2);
+	border-radius: 4px;
+	margin: 2rem 0
+}

@@ -1,27 +1,15 @@
-// @ts-nocheck
-import {
-	CONNECTION_MODES,
-	CONNECTION_STATUS,
-	NAT_SERVICES,
-} from './constants.js';
-
-interface RTCPeerConnectionWithCandidates extends RTCPeerConnection {
-	iceCandidates: any[];
-	bufferedIceCandidates: RTCIceCandidate[];
-}
+import { CONNECTION_MODES, CONNECTION_STATUS } from './constants.js';
+import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
 
 export default class NetworkTester {
-	private readonly iceServers: any;
+	iceServers: RTCIceServer[] | IceServerInterface[];
+	connectionMode: string;
+	natService: string;
 
-	private readonly connectionMode: string;
+	localPeer: null | RTCPeerConnectionWithBuffers;
+	remotePeer: null | RTCPeerConnectionWithBuffers;
 
-	private readonly natService: any;
-
-	localPeer: RTCPeerConnectionWithCandidates;
-
-	private remotePeer: RTCPeerConnectionWithCandidates;
-
-	private readonly constraints: {
+	constraints: {
 		video: {
 			facingMode: string;
 			width: number;
@@ -31,114 +19,64 @@ export default class NetworkTester {
 		audio: { deviceId: string };
 	};
 
-	private readonly offerOptions: {
+	offerOptions: {
 		offerToReceiveAudio: boolean;
 		offerToReceiveVideo: boolean;
 	};
 
-	private connectionTimeout: any;
+	connectionTimeout: ReturnType<typeof setTimeout>;
+	flushTimeout: ReturnType<typeof setTimeout>;
+	_connectionState: RTCPeerConnectionState | undefined;
+	_event: Event;
 
-	private flushTimeout: any;
-
-	private _connectionState: RTCPeerConnectionState;
-
-	private _event: Event;
-
-	private resolve: (value: { iceCandidates: any[]; status: string }) => void;
-
-	private reject: (reason?: any) => void;
+	resolve: (value: {
+		iceCandidates?: IceServerInterface[];
+		status: string;
+	}) => void;
+	reject: () => void;
 
 	constructor({
 		natService,
 		connectionMode = CONNECTION_MODES.ALL,
 		iceServers,
+	}: {
+		natService: string;
+		connectionMode: string;
+		iceServers: IceServerInterface[];
 	}) {
-		if (natService === NAT_SERVICES.TWILIO) {
-			switch (connectionMode) {
-				case 'all':
-					this.iceServers = iceServers;
-					break;
-				case 'stun':
-					this.iceServers = iceServers.filter(
-						(url) =>
-							Boolean(url?.url.startsWith('stun:')) ||
-							url?.urls.startsWith('stun:'),
-					);
-					break;
-				case 'turn-udp':
-					this.iceServers = iceServers.filter(
-						(url) =>
-							Boolean(url?.url.startsWith('turn:')) && url?.url.endsWith('udp'),
-					);
-					break;
-				case 'turn-tcp':
-					this.iceServers = iceServers.filter(
-						(url) =>
-							Boolean(url?.url.startsWith('turn:')) && url?.url.endsWith('tcp'),
-					);
-					break;
-				case 'turn-tls':
-					this.iceServers = iceServers.filter((url) =>
-						url?.url.includes('443'),
-					);
-					break;
-				default:
-					this.iceServers = iceServers;
-			}
-		} else {
-			switch (connectionMode) {
-				case 'all':
-					// Xirsys returns an object when we need an array
-					this.iceServers = [iceServers];
-					break;
-				case 'stun':
-					this.iceServers = [
-						{
-							...iceServers,
-							urls: iceServers.urls.filter((url) => url.startsWith('stun:')),
-						},
-					];
-					break;
-				case 'turn-udp':
-					this.iceServers = [
-						{
-							...iceServers,
-							urls: iceServers.urls.filter(
-								(url) =>
-									Boolean(url.startsWith('turn:')) && url.endsWith('udp'),
-							),
-						},
-					];
-					break;
-				case 'turn-tcp':
-					this.iceServers = [
-						{
-							...iceServers,
-							urls: iceServers.urls.filter(
-								(url) =>
-									Boolean(url.startsWith('turn:')) && url.endsWith('tcp'),
-							),
-						},
-					];
-					break;
-				case 'turn-tls':
-					this.iceServers = [
-						{
-							...iceServers,
-							urls: iceServers.urls.filter((url) => url.startsWith('turns:')),
-						},
-					];
-					break;
-				default:
-					this.iceServers = [iceServers];
-			}
+		switch (connectionMode) {
+			case 'all':
+				this.iceServers = iceServers;
+				break;
+			case 'stun':
+				this.iceServers = iceServers.filter(
+					(url) =>
+						Boolean(url?.url?.startsWith('stun:')) ||
+						url?.urls?.startsWith('stun:'),
+				);
+				break;
+			case 'turn-udp':
+				this.iceServers = iceServers.filter(
+					(url) =>
+						Boolean(url?.url?.startsWith('turn:')) && url?.url?.endsWith('udp'),
+				);
+				break;
+			case 'turn-tcp':
+				this.iceServers = iceServers.filter(
+					(url) =>
+						Boolean(url?.url?.startsWith('turn:')) && url?.url?.endsWith('tcp'),
+				);
+				break;
+			case 'turn-tls':
+				this.iceServers = iceServers.filter((url) => url?.url?.includes('443'));
+				break;
+			default:
+				this.iceServers = iceServers;
 		}
 		this.connectionMode = connectionMode;
 		this.natService = natService;
 		this.localPeer = null;
 		this.remotePeer = null;
-
-		// maybe make these configurable?
 		this.constraints = {
 			video: {
 				deviceId: 'default',
@@ -162,22 +100,24 @@ export default class NetworkTester {
 			: 'all';
 
 		const rtcConfig: RTCConfiguration = {
-			iceServers: this.iceServers,
+			iceServers: this.iceServers as RTCIceServer[],
 			iceTransportPolicy,
 		};
 
-		this.localPeer = <RTCPeerConnectionWithCandidates>(
+		this.localPeer = <RTCPeerConnectionWithBuffers>(
 			new RTCPeerConnection(rtcConfig)
 		);
-		this.remotePeer = <RTCPeerConnectionWithCandidates>(
+		this.remotePeer = <RTCPeerConnectionWithBuffers>(
 			new RTCPeerConnection(rtcConfig)
 		);
 
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
 		global.localPeer = this.localPeer;
 
+		// There is a bug where if you add ice candidates before setRemoteDescription, the PC fails.
 		this.localPeer.bufferedIceCandidates = [];
 		this.remotePeer.bufferedIceCandidates = [];
-
 		this.localPeer.iceCandidates = [];
 
 		this.setupPeerListeners();
@@ -198,6 +138,7 @@ export default class NetworkTester {
 	}
 
 	setupPeerListeners() {
+		if (!this.localPeer) return;
 		this.localPeer.onicecandidate = (event) => {
 			if (
 				this.connectionMode === CONNECTION_MODES.STUN &&
@@ -211,23 +152,22 @@ export default class NetworkTester {
 				this.flushIceCandidates(this.remotePeer);
 				return;
 			}
-			this.localPeer.iceCandidates.push(event.candidate);
-			this.remotePeer.bufferedIceCandidates.push(event.candidate);
+			this.localPeer?.iceCandidates?.push(event.candidate);
+			this.remotePeer?.bufferedIceCandidates?.push(event.candidate);
 		};
 
+		if (!this.remotePeer) return;
 		this.remotePeer.onicecandidate = (event) => {
 			if (!event.candidate || !event.candidate.candidate) {
 				this.flushIceCandidates(this.localPeer);
 				return;
 			}
-			this.localPeer.bufferedIceCandidates.push(event.candidate);
+			this.localPeer?.bufferedIceCandidates?.push(event.candidate);
 		};
 
-		// We need this for FF
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 		if (this.localPeer.connectionState) {
 			this.localPeer.onconnectionstatechange = () =>
-				this.onConnectionStateChange(this.localPeer.connectionState);
+				this.onConnectionStateChange(this.localPeer?.connectionState);
 		} else {
 			// Legacy connection state
 			this.localPeer.oniceconnectionstatechange = (event) =>
@@ -240,53 +180,61 @@ export default class NetworkTester {
 		await this.createAnswer();
 	}
 
-	flushIceCandidates(peer) {
-		for (const c of peer.bufferedIceCandidates) {
-			peer.addIceCandidate(c);
+	flushIceCandidates(peer: RTCPeerConnectionWithBuffers | null) {
+		peer?.bufferedIceCandidates?.forEach((c) => peer.addIceCandidate(c));
+		if (peer?.bufferedIceCandidates) {
+			peer.bufferedIceCandidates = [];
 		}
-		peer.bufferedIceCandidates = [];
 	}
 
 	async createOffer() {
-		return this.localPeer
-			.createOffer(this.offerOptions)
-			.then(async (desc) =>
-				this.setDescription(desc, this.localPeer, this.remotePeer),
-			);
+		return this.localPeer?.createOffer(this.offerOptions).then(async (desc) => {
+			const description = desc as RTCSessionDescription;
+			return this.setDescription(description, this.localPeer, this.remotePeer);
+		});
 	}
 
-	async setDescription(desc, local, remote) {
-		await local.setLocalDescription(desc);
-		await remote.setRemoteDescription(desc);
+	async setDescription(
+		desc: RTCSessionDescription,
+		local: RTCPeerConnectionWithBuffers | null,
+		remote: RTCPeerConnectionWithBuffers | null,
+	) {
+		await local?.setLocalDescription(desc);
+		await remote?.setRemoteDescription(desc);
 	}
 
 	async createAnswer() {
 		return this.remotePeer
-			.createAnswer(this.offerOptions)
-			.then(async (desc) =>
-				this.setDescription(desc, this.remotePeer, this.localPeer),
-			);
+			?.createAnswer(this.offerOptions)
+			.then(async (desc) => {
+				const description = desc as RTCSessionDescription;
+				return this.setDescription(
+					description,
+					this.remotePeer,
+					this.localPeer,
+				);
+			});
 	}
 
 	getConnectionInfo() {
-		const { iceCandidates, connectionState, iceConnectionState } =
-			this.localPeer;
+		const candidates = this.localPeer?.iceCandidates;
+		const state = this.localPeer?.connectionState;
+		const iceState = this.localPeer?.iceConnectionState;
+
 		return {
-			iceCandidates,
+			candidates,
 			status:
-				// need to check both because of Firefox
-				// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-				connectionState || iceConnectionState === 'connected'
+				state || iceState === 'connected'
 					? CONNECTION_STATUS.CONNECTED
 					: CONNECTION_STATUS.FAILED,
 		};
 	}
 
-	onConnectionStateChange(connectionState: RTCPeerConnectionState) {
+	onConnectionStateChange(connectionState: RTCPeerConnectionState | undefined) {
 		this._connectionState = connectionState;
 		if (
-			this.localPeer.connectionState === 'failed' ||
-			this.localPeer.connectionState === 'connected'
+			this.localPeer?.connectionState === 'failed' ||
+			this.localPeer?.connectionState === 'connected'
 		) {
 			const connectionInfo = this.getConnectionInfo();
 			this.resolve(connectionInfo);
@@ -297,16 +245,13 @@ export default class NetworkTester {
 	// We need this for Firefox, since it doesn't support connectionState, only iceConnectionState.
 	onIceConnectionStateChange(event: Event) {
 		this._event = event;
-		const { iceConnectionState } = this.localPeer;
-		if (iceConnectionState === 'failed') {
+		const iceState = this.localPeer?.iceConnectionState;
+		if (iceState === 'failed') {
 			const connectionInfo = this.getConnectionInfo();
 			this.resolve(connectionInfo);
 			this.stop();
 		}
-		if (
-			iceConnectionState === 'connected' ||
-			iceConnectionState === 'completed'
-		) {
+		if (iceState === 'connected' || iceState === 'completed') {
 			const connectionInfo = this.getConnectionInfo();
 			this.resolve(connectionInfo);
 			global.clearTimeout(this.connectionTimeout);
@@ -316,8 +261,8 @@ export default class NetworkTester {
 
 	stop() {
 		try {
-			this.localPeer.close();
-			this.remotePeer.close();
+			this.localPeer?.close();
+			this.remotePeer?.close();
 			global.clearTimeout(this.connectionTimeout);
 			global.clearTimeout(this.flushTimeout);
 		} catch {

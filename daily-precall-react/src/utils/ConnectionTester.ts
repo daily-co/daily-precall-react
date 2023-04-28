@@ -1,214 +1,184 @@
+import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
+
 export default class ConnectionTester {
-  private readonly iceServers: any;
-  private localPeer: null;
-  private remotePeer: null;
-  private readonly mediaStream: MediaStream;
-  private offerOptions: {
-    offerToReceiveAudio: boolean;
-    offerToReceiveVideo: boolean;
-  };
-  // @ts-ignore
-  private connectionEstablished: (
-    value: PromiseLike<unknown> | unknown
-  ) => void;
-  private connectionFailed: ((reason?: any) => void) | undefined;
-  private connectionTimeout: number | undefined;
+	iceServers: RTCIceServer[] | IceServerInterface[];
+	localPeer: null | RTCPeerConnectionWithBuffers;
+	remotePeer: null | RTCPeerConnectionWithBuffers;
+	mediaStream: MediaStream;
+	offerOptions: {
+		offerToReceiveAudio: boolean;
+		offerToReceiveVideo: boolean;
+	};
 
-  // @ts-ignore
-  constructor({ iceServers, mediaStream }) {
-    this.iceServers = iceServers;
-    this.localPeer = null;
-    this.remotePeer = null;
-    this.mediaStream = mediaStream;
-    this.offerOptions = {
-      offerToReceiveAudio: true,
-      offerToReceiveVideo: true,
-    };
-  }
+	connectionEstablished: () => void;
+	connectionFailed: () => void;
+	connectionTimeout: ReturnType<typeof setTimeout>;
 
-  async setupRTCPeerConnection() {
-    if (!global.RTCPeerConnection) {
-      return;
-    }
-    const rtcConfig = {
-      iceServers: this.iceServers,
-      iceTransportPolicy: "relay",
-    };
+	constructor({
+		iceServers,
+		mediaStream,
+	}: {
+		iceServers: RTCIceServer[] | IceServerInterface[];
+		mediaStream: MediaStream;
+	}) {
+		this.iceServers = iceServers;
+		this.localPeer = null;
+		this.remotePeer = null;
+		this.mediaStream = mediaStream;
+		this.offerOptions = {
+			offerToReceiveAudio: true,
+			offerToReceiveVideo: true,
+		};
+	}
 
-    // @ts-ignore
-    this.localPeer = new RTCPeerConnection(rtcConfig);
-    // @ts-ignore
-    this.remotePeer = new RTCPeerConnection(rtcConfig);
+	async setupRTCPeerConnection() {
+		if (!global.RTCPeerConnection) {
+			return;
+		}
+		const rtcConfig: RTCConfiguration = {
+			iceServers: this.iceServers as RTCIceServer[],
+			iceTransportPolicy: 'relay',
+		};
 
-    // @ts-ignore
-    global.localPeer = this.localPeer;
+		this.localPeer = new RTCPeerConnection(rtcConfig);
+		this.remotePeer = new RTCPeerConnection(rtcConfig);
 
-    // There is a bug where if you add ice candidates before setRemoteDEscription, the PC fails.
-    // @ts-ignore
-    this.localPeer.bufferedIceCandidates = [];
-    // @ts-ignore
-    this.remotePeer.bufferedIceCandidates = [];
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		global.localPeer = this.localPeer;
 
-    this.setupPeerListeners();
-    await this.start();
-    return new Promise((resolve, reject) => {
-      this.connectionEstablished = resolve;
-      this.connectionFailed = reject;
-      // @ts-ignore
-      this.connectionTimeout = global.setTimeout(this.connectionFailed, 15000);
-    });
-  }
+		// There is a bug where if you add ice candidates before setRemoteDescription, the PC fails.
+		this.localPeer.bufferedIceCandidates = [];
+		this.remotePeer.bufferedIceCandidates = [];
 
-  setupPeerListeners() {
-    // @ts-ignore
-    this.localPeer.onicecandidate = (event) => {
-      if (!event.candidate || !event.candidate.candidate) {
-        this.flushIceCandidates(this.remotePeer);
-      } else {
-        // @ts-ignore
-        if (this.remotePeer.bufferedIceCandidates) {
-          // @ts-ignore
-          this.remotePeer.bufferedIceCandidates.push(event.candidate);
-        } else {
-          // @ts-ignore
-          this.remotePeer.addIceCandidate(event.candidate);
-        }
-      }
-    };
+		this.setupPeerListeners();
+		await this.start();
+		return new Promise((resolve, reject) => {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
+			this.connectionEstablished = resolve;
+			this.connectionFailed = reject;
+			this.connectionTimeout = global.setTimeout(this.connectionFailed, 15000);
+		});
+	}
 
-    // @ts-ignore
-    this.remotePeer.onicecandidate = (event) => {
-      if (!event.candidate || !event.candidate.candidate) {
-        this.flushIceCandidates(this.localPeer);
-      } else {
-        // @ts-ignore
-        if (this.localPeer.bufferedIceCandidates) {
-          // @ts-ignore
-          this.localPeer.bufferedIceCandidates.push(event.candidate);
-        } else {
-          // @ts-ignore
-          this.localPeer.addIceCandidate(event.candidate);
-        }
-      }
-    };
+	setupPeerListeners() {
+		if (!this.localPeer) return;
+		this.localPeer.onicecandidate = (event) => {
+			if (!event.candidate || !event.candidate.candidate) {
+				this.flushIceCandidates(this.remotePeer);
+			} else {
+				if (this.remotePeer?.bufferedIceCandidates) {
+					this.remotePeer.bufferedIceCandidates.push(event.candidate);
+				} else {
+					this.remotePeer?.addIceCandidate(event.candidate);
+				}
+			}
+		};
 
-    // @ts-ignore
-    if (this.localPeer.connectionState) {
-      // @ts-ignore
-      this.localPeer.onconnectionstatechange = () =>
-        // @ts-ignore
-        this.onConnectionStateChange(this.localPeer.connectionState);
-    } else {
-      // Legacy connection state
-      // @ts-ignore
-      this.localPeer.oniceconnectionstatechange = (event) =>
-        // @ts-ignore
-        this.onIceConnectionStateChange(event);
-    }
-  }
+		if (!this.remotePeer) return;
+		this.remotePeer.onicecandidate = (event) => {
+			if (!event.candidate || !event.candidate.candidate) {
+				this.flushIceCandidates(this.localPeer);
+			} else {
+				if (this.localPeer?.bufferedIceCandidates) {
+					this.localPeer.bufferedIceCandidates.push(event.candidate);
+					console.log(event.candidate);
+				} else {
+					this.localPeer?.addIceCandidate(event.candidate);
+				}
+			}
+		};
 
-  async start() {
-    if (this.mediaStream) {
-      this.addStream();
-    }
-    await this.createOffer();
-    await this.createAnswer();
-    await this.flushIceCandidates(this.localPeer);
-    await this.flushIceCandidates(this.remotePeer);
-  }
+		if (this.localPeer.connectionState) {
+			this.localPeer.onconnectionstatechange = () =>
+				this.onConnectionStateChange();
+		} else {
+			// Legacy connection state
+			this.localPeer.oniceconnectionstatechange = () =>
+				this.onIceConnectionStateChange();
+		}
+	}
 
-  flushIceCandidates(
-    peer: {
-      bufferedIceCandidates: any[] | null;
-      addIceCandidate: (arg0: any) => any;
-    } | null
-  ) {
-    // @ts-ignore
-    peer.bufferedIceCandidates?.forEach((c) => peer.addIceCandidate(c));
-    // @ts-ignore
-    peer.bufferedIceCandidates = null;
-  }
+	async start() {
+		if (this.mediaStream) {
+			this.addStream();
+		}
 
-  addStream() {
-    this.mediaStream.getTracks().forEach((track) => {
-      // @ts-ignore
-      this.localPeer.addTrack(track);
-      // @ts-ignore
-      this.remotePeer.addTrack(track);
-    });
-  }
+		await this.createOffer();
+		await this.createAnswer();
+		await this.flushIceCandidates(this.localPeer);
+		await this.flushIceCandidates(this.remotePeer);
+	}
 
-  createOffer() {
-    // @ts-ignore
-    return this.localPeer
-      .createOffer(this.offerOptions)
-      .then((desc: any) =>
-        this.setDescription(desc, this.localPeer, this.remotePeer)
-      );
-  }
+	flushIceCandidates(peer: RTCPeerConnectionWithBuffers | null) {
+		peer?.bufferedIceCandidates?.forEach((c) => peer.addIceCandidate(c));
+		if (peer?.bufferedIceCandidates) {
+			peer.bufferedIceCandidates = null;
+		}
+	}
 
-  async setDescription(
-    desc: any,
-    local: { setLocalDescription: (arg0: any) => any } | null,
-    remote: { setRemoteDescription: (arg0: any) => any } | null
-  ) {
-    // @ts-ignore
-    await local.setLocalDescription(desc);
-    // @ts-ignore
-    await remote.setRemoteDescription(desc);
-  }
+	addStream() {
+		this.mediaStream.getTracks().forEach((track) => {
+			this.localPeer?.addTrack(track);
+			this.remotePeer?.addTrack(track);
+		});
+	}
 
-  createAnswer() {
-    // @ts-ignore
-    return this.remotePeer
-      .createAnswer(this.offerOptions)
-      .then((desc: any) =>
-        this.setDescription(desc, this.remotePeer, this.localPeer)
-      );
-  }
+	createOffer() {
+		return this.localPeer?.createOffer(this.offerOptions).then((desc) => {
+			const description = desc as RTCSessionDescription;
+			return this.setDescription(description, this.localPeer, this.remotePeer);
+		});
+	}
 
-  // Legacy
-  onIceConnectionStateChange() {
-    // @ts-ignore
-    const { iceConnectionState } = this.localPeer;
-    if (iceConnectionState === "failed") {
-      // @ts-ignore
-      this.connectionFailed();
-      this.stop();
-    }
-    if (
-      iceConnectionState === "connected" ||
-      iceConnectionState === "completed"
-    ) {
-      // @ts-ignore
-      this.connectionEstablished();
-      global.clearTimeout(this.connectionTimeout);
-    }
-  }
+	async setDescription(
+		desc: RTCSessionDescription,
+		local: RTCPeerConnectionWithBuffers | null,
+		remote: RTCPeerConnectionWithBuffers | null,
+	) {
+		await local?.setLocalDescription(desc);
+		await remote?.setRemoteDescription(desc);
+	}
 
-  onConnectionStateChange() {
-    // @ts-ignore
-    const { connectionState } = this.localPeer;
-    if (connectionState === "failed") {
-      // @ts-ignore
-      this.connectionFailed();
-      this.stop();
-    }
-    if (connectionState === "connected") {
-      // @ts-ignore
-      this.connectionEstablished();
-      global.clearTimeout(this.connectionTimeout);
-    }
-  }
+	createAnswer() {
+		return this.remotePeer?.createAnswer(this.offerOptions).then((desc) => {
+			const description = desc as RTCSessionDescription;
+			return this.setDescription(description, this.remotePeer, this.localPeer);
+		});
+	}
 
-  stop() {
-    try {
-      // @ts-ignore
-      this.localPeer.close();
-      // @ts-ignore
-      this.remotePeer.close();
-    } catch (e) {
-      // ignore errors from close
-    }
-  }
+	// Legacy
+	onIceConnectionStateChange() {
+		const state = this.localPeer?.iceConnectionState;
+		if (state === 'failed') {
+			this.connectionFailed();
+			this.stop();
+		}
+		if (state === 'connected' || state === 'completed') {
+			this.connectionEstablished();
+			global.clearTimeout(this.connectionTimeout);
+		}
+	}
+
+	onConnectionStateChange() {
+		const state = this.localPeer?.connectionState;
+		if (state === 'failed') {
+			this.connectionFailed();
+			this.stop();
+		}
+		if (state === 'connected') {
+			this.connectionEstablished();
+			global.clearTimeout(this.connectionTimeout);
+		}
+	}
+
+	stop() {
+		try {
+			this.localPeer?.close();
+			this.remotePeer?.close();
+		} catch (e) {
+			// ignore errors from close
+		}
+	}
 }

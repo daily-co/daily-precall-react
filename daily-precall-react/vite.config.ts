@@ -6,6 +6,7 @@ import dts from 'vite-plugin-dts';
 
 export default defineConfig({
 	plugins: [
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		react(),
 		dts({

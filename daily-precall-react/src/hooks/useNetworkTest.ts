@@ -1,229 +1,224 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import { ErrorEvent, TestState, useDailyTest } from "../DailyTestProvider.tsx";
+import { TestState, useDailyTest } from '../DailyTest.tsx';
+import { ErrorEvent, IceServerInterface, NetworkTestReport } from '../types.ts';
 import {
-  CONNECTION_MODES,
-  CONNECTION_STATUS,
-  ConnectionModes,
-  NAT_SERVICES_LINKS,
-} from "../utils/constants.ts";
-import NetworkTester from "../utils/NetworkTester.ts";
-import { v4 as uuidv4 } from "uuid";
+	CONNECTION_MODES,
+	CONNECTION_STATUS,
+	ConnectionModes,
+	NAT_SERVICES_LINKS,
+} from '../utils/constants.ts';
+import NetworkTester from '../utils/NetworkTester.ts';
+import { v4 as uuidv4 } from 'uuid';
 
 type Protocols = {
-  [key in ConnectionModes]?: {
-    result?: string | null;
-    iceCandidates?: any;
-  };
+	[key in ConnectionModes]?: {
+		result: string | null;
+		iceCandidates?: RTCIceCandidate[] | null;
+	};
 };
 
-export interface NetworkTestReport {
-  errors?: any;
-  connected?: ConnectionModes[];
-  failed?: ConnectionModes[];
-  successRate?: number;
-  result?: "failed" | "warning" | "passed" | "";
-  id?: string;
-  startedAt?: Date;
+interface TestResults {
+	candidates: RTCIceCandidate[];
+	status: string;
 }
 
 export const useNetworkTest = () => {
-  const { addTestData, callObject } = useDailyTest();
-  const [errors, setErrors] = useState<ErrorEvent[]>([]);
-  const [networkTestState, setNetworkTestState] = useState<TestState>("idle");
-  const [testDuration, setTestDuration] = useState<number>(0);
-  const [testTimeout, setTestTimeout] =
-    useState<ReturnType<typeof setTimeout>>();
-  const [networkInterval, setNetworkInterval] = useState<any>();
-  const [protocolTesters, setProtocolTesters] = useState<ConnectionModes[]>();
-  const [protocolTestData, setProtocolTestData] = useState<Protocols>({
-    [CONNECTION_MODES.ALL]: {
-      result: null,
-      iceCandidates: null,
-    },
-    [CONNECTION_MODES.RELAY_ONLY]: {
-      result: null,
-      iceCandidates: null,
-    },
-    [CONNECTION_MODES.STUN]: {
-      result: null,
-      iceCandidates: null,
-    },
-    [CONNECTION_MODES.TURN_UDP]: {
-      result: null,
-      iceCandidates: null,
-    },
-    [CONNECTION_MODES.TURN_TCP]: {
-      result: null,
-      iceCandidates: null,
-    },
-    [CONNECTION_MODES.TURN_TLS]: {
-      result: null,
-      iceCandidates: null,
-    },
-  });
+	const { addTestData, callObject } = useDailyTest();
+	const [errors, setErrors] = useState<ErrorEvent[]>([]);
+	const [networkTestState, setNetworkTestState] = useState<TestState>('idle');
+	const [testDuration, setTestDuration] = useState<number>(0);
+	const [testTimeout, setTestTimeout] =
+		useState<ReturnType<typeof setTimeout>>();
 
-  useEffect(() => {
-    if (testTimeout) {
-      clearTimeout(testTimeout);
-    }
-    if (testDuration > 0) {
-      const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
-        setNetworkTestState("stopping");
-      }, testDuration * 1000);
-      setTestTimeout(newTimeout);
-    }
-  }, [testDuration]);
+	const [protocolTesters, setProtocolTesters] = useState<NetworkTester[]>();
+	const [protocolTestData, setProtocolTestData] = useState<Protocols>({
+		[CONNECTION_MODES.ALL]: {
+			result: null,
+			iceCandidates: null,
+		},
+		[CONNECTION_MODES.RELAY_ONLY]: {
+			result: null,
+			iceCandidates: null,
+		},
+		[CONNECTION_MODES.STUN]: {
+			result: null,
+			iceCandidates: null,
+		},
+		[CONNECTION_MODES.TURN_UDP]: {
+			result: null,
+			iceCandidates: null,
+		},
+		[CONNECTION_MODES.TURN_TCP]: {
+			result: null,
+			iceCandidates: null,
+		},
+		[CONNECTION_MODES.TURN_TLS]: {
+			result: null,
+			iceCandidates: null,
+		},
+	});
 
-  useEffect(() => {
-    const isDone = Object.keys(protocolTestData).every(
-      (key) => protocolTestData[key]?.result !== null
-    );
-    if (isDone) setNetworkTestState("finished");
-  }, [protocolTestData]);
+	useEffect(() => {
+		if (testDuration > 0) {
+			const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
+				setNetworkTestState('stopping');
+			}, testDuration * 1000);
+			setTestTimeout(newTimeout);
+		}
+	}, [testDuration]);
 
-  const addError = useCallback((error: any) => {
-    const newError: ErrorEvent = {
-      timestamp: new Date(),
-      error,
-    };
-    setErrors((prevState) => [...prevState, newError]);
-  }, []);
+	useEffect(() => {
+		const isDone = Object.keys(protocolTestData).every(
+			(key) => protocolTestData[key]?.result !== null,
+		);
+		if (isDone) setNetworkTestState('finished');
+	}, [protocolTestData]);
 
-  useEffect(() => {
-    if (!callObject) return;
-    callObject.on("error", addError);
-    callObject.on("nonfatal-error", addError);
+	const addError = useCallback((error: any) => {
+		const newError: ErrorEvent = {
+			timestamp: new Date(),
+			error,
+		};
+		setErrors((prevState) => [...prevState, newError]);
+	}, []);
 
-    return function cleanup() {
-      callObject.off("error", addError);
-      callObject.off("nonfatal-error", addError);
-    };
-  }, [callObject]);
+	useEffect(() => {
+		if (!callObject) return;
+		callObject.on('error', addError);
+		callObject.on('nonfatal-error', addError);
 
-  useEffect(() => {
-    const handleNewState = async () => {
-      switch (networkTestState) {
-        case "idle":
-          break;
-        case "starting":
-          const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
-          const iceServers = await svcResp.json();
-          const testers = await Promise.all(
-            Object.keys(protocolTestData).map((test) =>
-              initiateProtocolTester(test, iceServers)
-            )
-          );
-          setProtocolTesters(testers);
-          setNetworkTestState("running");
-          break;
-        case "running":
-          const n = setInterval(async () => {}, 1000);
-          setNetworkInterval(n);
-          break;
-        case "stopping":
-          if (protocolTesters) {
-            await Promise.all(
-              protocolTesters.map((test: any) => {
-                test.stop();
-              })
-            );
-          }
-          setNetworkTestState("finished");
-          break;
-        case "finished":
-          if (networkInterval) clearInterval(networkInterval);
-          if (testTimeout) clearTimeout(testTimeout);
+		return function cleanup() {
+			callObject.off('error', addError);
+			callObject.off('nonfatal-error', addError);
+		};
+	}, [addError, callObject]);
 
-          setNetworkTestResults();
-          break;
-        case "aborted":
-          if (networkInterval) clearInterval(networkInterval);
-          if (testTimeout) clearTimeout(testTimeout);
-          if (protocolTesters) {
-            protocolTesters.map((test: any) => {
-              test.stop();
-            });
-          }
-          setNetworkTestState("idle");
-          setErrors([]);
-          break;
-      }
-    };
-    handleNewState();
+	useEffect(() => {
+		const handleNewState = async () => {
+			switch (networkTestState) {
+				case 'idle':
+					console.log('idle');
+					break;
+				case 'starting':
+					console.log('starting');
+					const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
+					const iceServers = await svcResp.json();
+					const testers = await Promise.all(
+						Object.keys(protocolTestData).map((test) =>
+							initiateProtocolTester(test, iceServers),
+						),
+					);
+					console.log({ testers });
+					setProtocolTesters(testers);
+					setNetworkTestState('running');
+					break;
+				case 'running':
+					console.log('running');
+					break;
+				case 'stopping':
+					console.log('stopping');
 
-    return () => {
-      clearInterval(networkInterval);
-    };
-  }, [networkTestState]);
+					if (protocolTesters) {
+						await Promise.all(
+							protocolTesters.map((test: NetworkTester) => {
+								test.stop();
+							}),
+						);
+					}
+					setNetworkTestState('finished');
+					break;
+				case 'finished':
+					console.log('finished');
 
-  const setNetworkTestResults = () => {
-    const results: NetworkTestReport = {};
-    const connected = Object.keys(protocolTestData).filter(
-      (key) => protocolTestData[key]?.result === "connected"
-    );
-    const failed = Object.keys(protocolTestData).filter(
-      (key) => protocolTestData[key]?.result === "failed"
-    );
+					if (testTimeout) clearTimeout(testTimeout);
 
-    if (
-      protocolTestData[CONNECTION_MODES.RELAY_ONLY]?.result ===
-      CONNECTION_STATUS.CONNECTED
-    ) {
-      results.result = "passed";
-    } else if (
-      protocolTestData[CONNECTION_MODES.RELAY_ONLY]?.result ===
-      CONNECTION_STATUS.FAILED
-    ) {
-      results.result = "failed";
-    } else {
-      results.result = "warning";
-    }
+					setNetworkTestResults();
+					break;
+				case 'aborted':
+					console.log('aborted');
+					if (testTimeout) clearTimeout(testTimeout);
+					if (protocolTesters) {
+						protocolTesters.map((test: NetworkTester) => {
+							test.stop();
+						});
+					}
+					setNetworkTestState('idle');
+					setErrors([]);
+					break;
+			}
+		};
+		handleNewState();
+	}, [networkTestState]);
 
-    results.connected = connected;
-    results.errors = errors;
-    results.failed = failed;
-    results.id = uuidv4();
-    results.startedAt = new Date();
+	const setNetworkTestResults = () => {
+		const results: NetworkTestReport = {};
+		const connected = Object.keys(protocolTestData).filter(
+			(key) => protocolTestData[key]?.result === 'connected',
+		);
+		const failed = Object.keys(protocolTestData).filter(
+			(key) => protocolTestData[key]?.result === 'failed',
+		);
 
-    addTestData("network", results);
-  };
+		if (
+			protocolTestData[CONNECTION_MODES.RELAY_ONLY]?.result ===
+			CONNECTION_STATUS.CONNECTED
+		) {
+			results.result = 'passed';
+		} else if (
+			protocolTestData[CONNECTION_MODES.RELAY_ONLY]?.result ===
+			CONNECTION_STATUS.FAILED
+		) {
+			results.result = 'failed';
+		} else {
+			results.result = 'warning';
+		}
 
-  async function initiateProtocolTester(
-    connectionMode: ConnectionModes,
-    iceServers: RTCIceServer[]
-  ) {
-    const instance: any = new NetworkTester({
-      natService: "twilio",
-      connectionMode,
-      iceServers,
-    });
+		results.connected = connected;
+		results.errors = errors;
+		results.failed = failed;
+		results.id = uuidv4();
+		results.startedAt = new Date();
 
-    instance.setupRTCPeerConnection().then((result: any) => {
-      setProtocolTestData((prevState) => ({
-        ...prevState,
-        [connectionMode]: {
-          result: result.status,
-          iceCandidates: result.iceCandidates,
-        },
-      }));
-    });
+		addTestData('network', results);
+	};
 
-    return instance;
-  }
+	async function initiateProtocolTester(
+		connectionMode: ConnectionModes,
+		iceServers: IceServerInterface[],
+	) {
+		const instance: NetworkTester = new NetworkTester({
+			natService: 'twilio',
+			connectionMode,
+			iceServers,
+		});
 
-  const startNetworkTest = async (timeout: number = 10): Promise<any> => {
-    setTestDuration(timeout);
-    setNetworkTestState("starting");
-  };
+		instance.setupRTCPeerConnection().then((result) => {
+			const testResults = result as TestResults;
+			setProtocolTestData((prevState) => ({
+				...prevState,
+				[connectionMode]: {
+					result: testResults.status,
+					iceCandidates: testResults.candidates,
+				},
+			}));
+		});
 
-  const stopNetworkTest = () => {
-    setNetworkTestState("aborted");
-  };
+		return instance;
+	}
 
-  return {
-    startNetworkTest,
-    stopNetworkTest,
-    networkTestState,
-  };
+	const startNetworkTest = async (timeout = 10): Promise<any> => {
+		setTestDuration(timeout);
+		setNetworkTestState('starting');
+	};
+
+	const stopNetworkTest = () => {
+		setNetworkTestState('aborted');
+	};
+
+	return {
+		startNetworkTest,
+		stopNetworkTest,
+		networkTestState,
+	};
 };

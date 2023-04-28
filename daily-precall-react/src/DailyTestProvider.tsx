@@ -1,107 +1,49 @@
-import React, { createContext, useContext } from "react";
-import {
-  atom,
-  RecoilRootProps,
-  useRecoilCallback,
-  useRecoilValue,
-} from "recoil";
-import {
-  DailyCall,
-  DailyFatalErrorType,
-  DailyNonFatalErrorType,
-} from "@daily-co/daily-js";
-import {
-  CameraTestReport,
-  MicTestReport,
-  SpeakerTestReport,
-} from "./hooks/useMediaTest.ts";
-import { WebsocketsTestReport } from "./hooks/useWebsocketsTest.ts";
-import { NetworkTestReport } from "./hooks/useNetworkTest.ts";
-import { ConnectionTestReport } from "./hooks/useConnectionTest.ts";
+import React, { useEffect } from 'react';
+import { DailyCall, DailyEvent } from '@daily-co/daily-js';
 
-export type ErrorEvent = {
-  timestamp: Date;
-  error: DailyNonFatalErrorType | DailyFatalErrorType;
-};
-
-export type TestState =
-  | "idle"
-  | "starting"
-  | "running"
-  | "stopping"
-  | "finished"
-  | "error"
-  | "aborted";
-
-type TestDataKey =
-  | "camera"
-  | "speaker"
-  | "mic"
-  | "network"
-  | "connection"
-  | "websockets";
-
-interface DailyTestData {
-  camera?: CameraTestReport;
-  speaker?: SpeakerTestReport;
-  mic?: MicTestReport;
-  network?: NetworkTestReport;
-  connection?: ConnectionTestReport;
-  websockets?: WebsocketsTestReport;
-}
-
-export interface ContextValue {
-  testData: DailyTestData;
-  callObject: DailyCall | undefined;
-  addTestData(
-    key: TestDataKey,
-    data:
-      | CameraTestReport
-      | SpeakerTestReport
-      | MicTestReport
-      | NetworkTestReport
-      | ConnectionTestReport
-      | WebsocketsTestReport
-  ): void;
-}
-
-const DailyTestContext = createContext<ContextValue>({
-  testData: {},
-  addTestData: () => {},
-  callObject: undefined,
-});
-
-const testDataState = atom<DailyTestData>({
-  key: "test-data-state",
-  default: {},
-});
+import { DailyTest } from './DailyTest.tsx';
+import { RecoilRoot } from 'recoil';
 
 type Props = {
-  callObject?: DailyCall;
-  children: React.ReactNode;
-  recoilRootProps?: Omit<RecoilRootProps, "children">;
+	callObject: DailyCall | null;
+	children: React.ReactNode;
 };
 export const DailyTestProvider: React.FC<React.PropsWithChildren<Props>> = ({
-  children,
-  callObject,
+	children,
+	callObject,
 }) => {
-  const testData = useRecoilValue(testDataState);
-  const addTestData = useRecoilCallback(
-    ({ set }) =>
-      (key: TestDataKey, data) => {
-        set(testDataState, (prevData) => ({
-          ...prevData,
-          [key]: data,
-        }));
-      },
-    []
-  );
+	useEffect(() => {
+		if (!callObject || callObject.isDestroyed()) return;
 
-  return (
-    <DailyTestContext.Provider value={{ testData, addTestData, callObject }}>
-      {children}
-    </DailyTestContext.Provider>
-  );
+		function handleNewMeetingState() {
+			switch (callObject?.meetingState()) {
+				case 'left-meeting':
+					callObject.destroy();
+					break;
+				default:
+					break;
+			}
+		}
+
+		// Use initial state
+		handleNewMeetingState();
+		callObject?.on('left-meeting' as DailyEvent, handleNewMeetingState);
+
+		callObject.startCamera().then(() =>
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
+			console.log(callObject?._callFrameId, '====CAMERA STARTED!==='),
+		);
+
+		// Stop listening for changes in state
+		return () => {
+			callObject.off('left-meeting' as DailyEvent, handleNewMeetingState);
+		};
+	}, [callObject]);
+
+	return (
+		<RecoilRoot>
+			<DailyTest callObject={callObject}>{children}</DailyTest>
+		</RecoilRoot>
+	);
 };
-export const useDailyTest = () => useContext(DailyTestContext);
-DailyTestContext.displayName = "DailyTestContext";

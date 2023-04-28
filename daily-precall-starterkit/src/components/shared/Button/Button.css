@@ -1,0 +1,49 @@
+.button {
+	background-color: transparent;
+	border-radius: 4px;
+	border: 1px solid transparent;
+	cursor: pointer;
+	display: inline-block;
+	min-width: 64px;
+	padding: .5rem;
+	text-align: center;
+}
+
+.button:disabled,
+.button[disabled] {
+	background: rgba(var(--mid-grey));
+	color: rgba(var(--dark-grey), 0.6);
+	cursor: not-allowed;
+}
+
+.button-tab {
+	background: transparent;
+	font-size: .8rem;
+	opacity: .3
+}
+
+.button-primary {
+	background-color: rgba(var(--accent));
+	color: rgba(var(--dark-grey));
+}
+
+.button-primary:hover(:not[disabled]) {
+	background-color: rgba(var(--accent), 0.8);
+	box-shadow: 0 0 0 2px rgba(var(--mid-grey), 0.2);
+}
+
+.button-ghost {
+	background: transparent;
+	border-radius: 0;
+	padding: .1rem;
+	border-top: 0;
+	border-right: 0;
+	border-bottom: 2px solid rgba(var(--accent));
+	border-left: 0;
+}
+
+.button-ghost:hover {
+	border-bottom: 2px solid rgba(var(--accent));
+	background-color: rgba(var(--mid-grey), 0.2);
+}
+

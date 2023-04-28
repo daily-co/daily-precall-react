@@ -7,32 +7,38 @@ a helper library, and `daily-react-ui`, an example application showing how to us
 
 To get started, include the `DailyTest` component in your app:
 
-```tsx
+```typescript jsx
 import { DailyTest } from '@daily-co/daily-react-precall';
 
 function App() {
-	return <DailyTest callObject={dailyCallObject}>{/* … */}</DailyTest>;
+  return (
+    <DailyTest callObject={dailyCallObject}>
+      {/* … */}
+    </DailyTest>
+  );
 }
 ```
 
 DailyTest is a component which gives every other component in your application access to test data:
 
-```tsx
+```typescript jsx
 import { useDailyTest, useMediaTest } from '@daily-co/daily-precall-react';
 
 export const MicCheck: React.FC = () => {
-	const { captureMicReport } = useMediaTest();
-	const { testData } = useDailyTest();
+  const { captureMicReport } = useMediaTest();
+  const { testData } = useDailyTest();
 
-	return (
-		<>
-			<button onClick={captureMicReport} role="button">Get information about mic devices</button>
-			<h1>Results:</h1>
-			<p>
-				<pre>{JSON.stringify(testData?.mic, null, 2)}</pre>
+  return (
+    <>
+      <button onClick={captureMicReport} role="button">
+        Get information about mic devices
+      </button>
+      <h1>Results:</h1>
+      <p>
+        <pre>{JSON.stringify(testData?.mic, null, 2)}</pre>
       </p>
-		</>
-	);
+    </>
+  );
 };
 ```
 

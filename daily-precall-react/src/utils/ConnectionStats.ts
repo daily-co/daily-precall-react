@@ -1,17 +1,25 @@
 import ConnectionTester from './ConnectionTester.ts';
+import { IceServerInterface, RTCStatsReportStat } from '../types.ts';
 
 export default class ConnectionStats {
-	private readonly intervalId: string;
-	private readonly timeoutId: string;
-	private roundTripTimes: any[];
-	private readonly iceServers: any;
-	private readonly mediaStream: MediaStream;
-	private readonly limitSamples: boolean;
-	private networkTester: ConnectionTester | undefined;
-	private peerConnection: RTCPeerConnection | undefined;
+	intervalId: string;
+	timeoutId: string;
+	roundTripTimes: number[];
+	iceServers: IceServerInterface[];
+	mediaStream: MediaStream;
+	limitSamples: boolean;
+	networkTester: ConnectionTester | undefined;
+	peerConnection: RTCPeerConnection | undefined | null;
 
-	// @ts-ignore
-	constructor({ iceServers, mediaStream, limitSamples = true }) {
+	constructor({
+		iceServers,
+		mediaStream,
+		limitSamples = true,
+	}: {
+		iceServers: IceServerInterface[];
+		mediaStream: MediaStream;
+		limitSamples: boolean;
+	}) {
 		this.intervalId = '';
 		this.timeoutId = '';
 		this.roundTripTimes = [];
@@ -27,7 +35,6 @@ export default class ConnectionStats {
 		});
 
 		await this.networkTester.setupRTCPeerConnection();
-		// @ts-ignore
 		this.peerConnection = this.networkTester.localPeer;
 	}
 
@@ -60,82 +67,77 @@ export default class ConnectionStats {
 			this.roundTripTimes.shift();
 		}
 
-		this.roundTripTimes.push(rtt);
+		rtt && this.roundTripTimes.push(rtt);
 	}
 
 	sampleRoundTripTime() {
-		// @ts-ignore
-		return this.peerConnection.getStats().then((statsMap: any) => {
+		return this.peerConnection?.getStats().then((statsMap: RTCStatsReport) => {
 			const statsObject = this.mapToObj(statsMap);
-			const stats = Object.values(statsObject);
+			const stats: RTCStatsReportStat = Object.values(statsObject);
 
-			const currentRoundTripTimeStats = stats.filter(
-				(stat: any) => stat.currentRoundTripTime,
-			);
+			const currentRoundTripTimeStats = stats.filter((stat) => {
+				return stat.currentRoundTripTime;
+			});
 
+			// Firefox is not yet spec compliant so will need this until they are
 			if (currentRoundTripTimeStats.length === 0) {
-				//Firefox is not spec compliant so will need this until they are
-
-				const roundTripTimeStats: any = stats.find(
-					(stat: any) => typeof stat.roundTripTime === 'number',
-				);
+				const roundTripTimeStats = stats.find((stat) => {
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-ignore - it exists!
+					return typeof stat.roundTripTime === 'number';
+				});
 
 				if (!roundTripTimeStats) {
 					return 0;
 				}
 
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore - it exists!
 				return roundTripTimeStats.roundTripTime / 1000;
 			} else {
-				//Safari does not support nominated
-
 				const nominatedCurrentRoundTripTimeStats =
-					currentRoundTripTimeStats.find((stat: any) => stat.nominated);
+					currentRoundTripTimeStats.find((stat) => stat.nominated);
 
 				return nominatedCurrentRoundTripTimeStats
-					? // @ts-ignore
-					  nominatedCurrentRoundTripTimeStats.currentRoundTripTime
-					: // @ts-ignore
-					  currentRoundTripTimeStats[0].currentRoundTripTime;
+					? nominatedCurrentRoundTripTimeStats.currentRoundTripTime
+					: currentRoundTripTimeStats[0].currentRoundTripTime;
 			}
 		});
 	}
 
 	async getPacketLoss() {
-		// @ts-ignore
-		return this.peerConnection.getStats().then((statsMap: any) => {
+		return this.peerConnection?.getStats().then((statsMap: RTCStatsReport) => {
 			const statsObject = this.mapToObj(statsMap);
-			const stats = Object.values(statsObject);
+			const stats: RTCInboundRtpStreamStats[] = Object.values(statsObject);
 
-			let packetLossStats = stats.find(
-				(stat: any) =>
-					typeof stat.packetsLost === 'number' && stat.mediaType === 'video',
-			);
+			const videoPacketLossStats = stats.find((stat) => {
+				return stat.kind === 'video';
+			});
 
-			if (!packetLossStats) {
-				//Safari does not support media type
-				packetLossStats = stats.find(
-					(stat: any) => typeof stat.packetsLost === 'number',
-				);
+			const lost =
+				videoPacketLossStats && videoPacketLossStats.packetsLost
+					? videoPacketLossStats.packetsLost
+					: 0;
+			const received =
+				videoPacketLossStats && videoPacketLossStats.packetsReceived
+					? videoPacketLossStats.packetsReceived
+					: 0;
+			const lostAndReceived = lost + received;
+
+			if (received > 0) {
+				return (lost / lostAndReceived) * 100;
+			} else {
+				return 0;
 			}
-
-			// @ts-ignore
-			return packetLossStats && packetLossStats.packetsReceived > 0
-				? // @ts-ignore
-				  (packetLossStats.packetsLost /
-						// @ts-ignore
-						(packetLossStats.packetsLost + packetLossStats.packetsReceived)) *
-						100
-				: 0;
 		});
 	}
 
 	getMaxRtt() {
-		return Math.max.apply(Math, this.roundTripTimes);
+		return Math.max(...this.roundTripTimes);
 	}
 
 	closeConnection() {
-		// @ts-ignore
-		this.networkTester.stop();
+		this.networkTester?.stop();
 	}
 
 	stopSampling() {
@@ -144,25 +146,20 @@ export default class ConnectionStats {
 		this.closeConnection();
 	}
 
-	mapToObj(m: any[]) {
+	mapToObj(m: RTCStatsReport) {
 		if (!m.entries) {
 			return m;
 		}
+
 		const o = {};
-		m.forEach(function (v: any, k: string | number) {
+		m.forEach((v, k) => {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			o[k] = v;
 		});
 		return o;
 	}
 }
-
-export const resultTypes = {
-	BAD: 'bad',
-	WARNING: 'warning',
-	GOOD: 'good',
-	CONNECTION_FAILED: 'failed',
-};
 
 const RTT_LIMIT = 1.0;
 const RTT_WARNING = 0.7;
@@ -173,60 +170,59 @@ export const getResultFromNetworkTest = (networkStats: {
 	maxRTT: number;
 	packetLoss: number;
 }) => {
+	const result = {
+		rtt: '',
+		packetLoss: '',
+	};
+
 	if (!networkStats) {
 		// connection failed so no stats available
-		return resultTypes.CONNECTION_FAILED;
+		return 'failed';
 	}
-
-	interface ResultInterface {
-		rtt?: string;
-		packetLoss?: string;
-	}
-
-	const result: ResultInterface = {};
 
 	switch (true) {
 		case networkStats.maxRTT >= RTT_LIMIT:
-			result.rtt = resultTypes.BAD;
+			result.rtt = 'bad';
 			break;
 		case networkStats.maxRTT >= RTT_WARNING:
-			result.rtt = resultTypes.WARNING;
+			result.rtt = 'warning';
 			break;
 
 		case networkStats.maxRTT < RTT_WARNING:
-			result.rtt = resultTypes.GOOD;
+			result.rtt = 'good';
+			break;
+		default:
 			break;
 	}
 
 	switch (true) {
 		case networkStats.packetLoss >= PACKETLOSS_LIMIT:
-			result.packetLoss = resultTypes.BAD;
+			result.packetLoss = 'bad';
 			break;
 		case networkStats.packetLoss >= PACKETLOSS_WARNING:
-			result.packetLoss = resultTypes.WARNING;
+			result.packetLoss = 'warning';
 			break;
 
 		case networkStats.packetLoss < PACKETLOSS_WARNING:
-			result.packetLoss = resultTypes.GOOD;
+			result.packetLoss = 'good';
+			break;
+		default:
 			break;
 	}
-
-	const good =
-		result.packetLoss === resultTypes.GOOD && result.rtt === resultTypes.GOOD;
+	const good = result.packetLoss === 'good' && result.rtt === 'good';
 
 	const bad =
-		result.packetLoss === resultTypes.BAD ||
-		result.rtt === resultTypes.BAD ||
-		(result.rtt === resultTypes.WARNING &&
-			result.packetLoss === resultTypes.WARNING);
+		result.packetLoss === 'bad' ||
+		result.rtt === 'bad' ||
+		(result.rtt === 'warning' && result.packetLoss === 'warning');
 
 	if (good) {
-		return resultTypes.GOOD;
+		return 'good';
 	}
 
 	if (bad) {
-		return resultTypes.BAD;
+		return 'bad';
 	}
 
-	return resultTypes.WARNING;
+	return 'warning';
 };
