@@ -12,16 +12,15 @@
   "dependencies": {
     "@daily-co/daily-precall-react": "*",
     "@daily-co/daily-react": "^0.7.3",
-    "@types/react-transition-group": "^4.4.5",
     "react": "^18.2.0",
-    "react-animated-css": "^1.2.1",
     "react-dom": "^18.2.0",
     "react-transition-group": "^4.4.5"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
+		"@types/react-transition-group": "^4.4.5",
+		"@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-react": "^4.0.0",
     "eslint": "^8.38.0",

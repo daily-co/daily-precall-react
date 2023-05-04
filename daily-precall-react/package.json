@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@daily-co/daily-js": "^0.44.0",
-    "@types/uuid": "^9.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recoil": "^0.7.7",
@@ -22,7 +21,8 @@
     "@types/node": "^18.16.1",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
+		"@types/uuid": "^9.0.1",
+		"@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-react": "^4.0.0",
     "eslint": "^8.38.0",
