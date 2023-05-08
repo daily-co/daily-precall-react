@@ -1,10 +1,8 @@
 import {
-	DailyCameraError,
 	DailyFatalErrorType,
 	DailyNonFatalErrorType,
 } from '@daily-co/daily-js';
 import { ConnectionModes } from './utils/constants.js';
-import { StatefulDevice } from '@daily-co/daily-react';
 
 export interface RTCPeerConnectionWithBuffers extends RTCPeerConnection {
 	bufferedIceCandidates?: RTCIceCandidate[] | null;
@@ -53,33 +51,6 @@ export interface WebsocketsTestReport {
 	id?: string;
 	passed?: string[];
 	result?: string | 'passed' | 'failed' | 'warning' | '';
-	startedAt?: Date;
-}
-
-export interface CameraTestReport {
-	camError?: DailyCameraError | null | string;
-	camState?: string;
-	cameras?: StatefulDevice[] | null;
-	hasCamError?: boolean;
-	selectedCamera?: MediaDeviceInfo | NonNullable<unknown>;
-	id?: string;
-	startedAt?: Date;
-}
-
-export interface SpeakerTestReport {
-	selectedSpeaker?: MediaDeviceInfo | NonNullable<unknown>;
-	speakers?: StatefulDevice[] | null;
-	id?: string;
-	startedAt?: Date;
-}
-
-export interface MicTestReport {
-	hasMicError?: boolean;
-	micError?: DailyCameraError | null | string;
-	micState?: string;
-	microphones?: StatefulDevice[] | null;
-	selectedMic?: MediaDeviceInfo | NonNullable<unknown>;
-	id?: string;
 	startedAt?: Date;
 }
 
