@@ -1,7 +1,23 @@
 # About
-
 Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
 a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
+
+# Running locally
+This repo uses Yarn workspaces.
+```bash
+# clone repo
+git clone git@github.com:daily-co/daily-precall-react.git
+
+# install dependencies
+cd daily-precall-react yarn
+
+# run library
+yarn watch-lib
+
+# run starterkit app
+yarn watch-app
+```
+Any changes made in the library will be automatically picked up in the app.
 
 # Usage
 You'll need to install both `daily-precall-react` and [`daily-react`](https://docs.daily.co/reference/daily-react) since you'll need access to a `callObject` in order

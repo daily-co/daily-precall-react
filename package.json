@@ -6,6 +6,6 @@
 	],
   "scripts": {
     "watch-lib": "yarn workspace @daily-co/daily-precall-react watch",
-    "watch-ui": "yarn workspace daily-precall-starterkit watch"
+    "watch-app": "yarn workspace daily-precall-starterkit watch"
   }
 }
