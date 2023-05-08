@@ -1,14 +1,15 @@
 import React, { createContext, useContext } from 'react';
 import { atom, useRecoilCallback, useRecoilValue } from 'recoil';
 import { DailyCall } from '@daily-co/daily-js';
+
 import {
+	ConnectionTestReport,
+	NetworkTestReport,
+	WebsocketsTestReport,
 	CameraTestReport,
 	MicTestReport,
 	SpeakerTestReport,
-} from './hooks/useMediaTest.ts';
-import { WebsocketsTestReport } from './hooks/useWebsocketsTest.ts';
-import { NetworkTestReport } from './hooks/useNetworkTest.ts';
-import { ConnectionTestReport } from './types.ts';
+} from './types.ts';
 
 export type TestState =
 	| 'idle'

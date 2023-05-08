@@ -29,11 +29,7 @@ export const DailyTestProvider: React.FC<React.PropsWithChildren<Props>> = ({
 		handleNewMeetingState();
 		callObject?.on('left-meeting' as DailyEvent, handleNewMeetingState);
 
-		callObject.startCamera().then(() =>
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
-			console.log(callObject?._callFrameId, '====CAMERA STARTED!==='),
-		);
+		callObject.startCamera();
 
 		// Stop listening for changes in state
 		return () => {

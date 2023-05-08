@@ -7,7 +7,7 @@ import { SpeakerCheck } from './MediaDevices/SpeakerCheck';
 import { MicCheck } from './MediaDevices/MicCheck';
 import { NetworkCheck } from './Network/NetworkCheck';
 import { ConnectionCheck } from './Network/ConnectionCheck';
-import { WebsocketCheck } from './Network/WebsocketCheck';
+import { WebsocketsCheck } from './Network/WebsocketsCheck';
 
 export const Tests = () => {
 	const { uiState } = useUiState();
@@ -31,7 +31,7 @@ export const Tests = () => {
 
 					{uiState === 'network-check' && <NetworkCheck />}
 					{uiState === 'connection-check' && <ConnectionCheck />}
-					{uiState === 'websocket-check' && <WebsocketCheck />}
+					{uiState === 'websocket-check' && <WebsocketsCheck />}
 				</>
 			)}
 		</DailyTestProvider>

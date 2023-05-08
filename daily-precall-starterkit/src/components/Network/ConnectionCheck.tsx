@@ -1,9 +1,12 @@
 import React from 'react';
-import { useConnectionTest, useDailyTest } from '@daily-co/daily-precall-react';
+import {
+	useConnectionTest,
+	useDailyTest,
+	ConnectionTestReport,
+} from '@daily-co/daily-precall-react';
 import { Card } from '../shared/Card/Card';
 import { Button } from '../shared/Button/Button';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
-import { ConnectionTestReport } from '@daily-co/daily-precall-react/src/hooks/useConnectionTest';
 
 const TEST_DURATION = 10;
 export const ConnectionCheck: React.FC = () => {

@@ -1,19 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { startWebsocketTests, TestRegions } from '../utils/WebSocketTester.ts';
-
 import { TestState, useDailyTest } from '../DailyTest.tsx';
-
-import { ErrorEvent } from '../types.ts';
+import { ErrorEvent, WebsocketsTestReport } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
-
-export interface WebsocketsTestReport {
-	passed?: string[];
-	failed?: string[];
-	result?: string | 'passed' | 'failed' | 'warning' | '';
-	errors?: any;
-	id?: string;
-	startedAt?: Date;
-}
 
 type Regions = {
 	[key in TestRegions]?: {
@@ -30,7 +19,7 @@ export const useWebsocketsTest = () => {
 	const [testTimeout, setTestTimeout] = useState<ReturnType<
 		typeof setTimeout
 	> | null>();
-	const [networkInterval, setNetworkInterval] = useState<any>();
+	// const [networkInterval, setNetworkInterval] = useState<any>();
 	const [websocketRegionTestData, setWebsocketRegionTestData] =
 		useState<Regions>({
 			'eu-central-1': {
@@ -134,13 +123,13 @@ export const useWebsocketsTest = () => {
 					setWebsocketsTestState('running');
 					break;
 				case 'running':
-					const n = setInterval(async () => {}, 1000);
-					setNetworkInterval(n);
+					// const n = setInterval(async () => {}, 1000);
+					// setNetworkInterval(n);
 					break;
 				case 'stopping':
-					if (networkInterval) {
-						clearInterval(networkInterval);
-					}
+					// if (networkInterval) {
+					// 	clearInterval(networkInterval);
+					// }
 					if (testTimeout) {
 						clearTimeout(testTimeout);
 					}
@@ -149,12 +138,12 @@ export const useWebsocketsTest = () => {
 					setWebsocketsTestState('finished');
 					break;
 				case 'finished':
-					if (networkInterval) clearInterval(networkInterval);
+					// if (networkInterval) clearInterval(networkInterval);
 					if (testTimeout) clearTimeout(testTimeout);
 					setWebsocketResults();
 					break;
 				case 'aborted':
-					if (networkInterval) clearInterval(networkInterval);
+					// if (networkInterval) clearInterval(networkInterval);
 					if (testTimeout) clearTimeout(testTimeout);
 					setWebsocketsTestState('idle');
 					break;
@@ -162,9 +151,9 @@ export const useWebsocketsTest = () => {
 		};
 		handleNewState();
 
-		return () => {
-			clearInterval(networkInterval);
-		};
+		// return () => {
+		// 	clearInterval(networkInterval);
+		// };
 	}, [websocketsTestState]);
 
 	const setWebsocketResults = () => {
@@ -199,12 +188,16 @@ export const useWebsocketsTest = () => {
 		addTestData('websockets', results);
 	};
 
-	const startWebsocketsTest = async (timeout = 10): Promise<any> => {
+	const startWebsocketsTest = async (timeout = 10) => {
 		setTestDuration(timeout);
 		setWebsocketsTestState('starting');
 	};
 
 	const stopWebsocketsTest = () => {
+		if (websocketsTestState === 'finished') {
+			// it's already finished so no need to do anything!
+			return;
+		}
 		setWebsocketsTestState('aborted');
 	};
 

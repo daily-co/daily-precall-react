@@ -174,7 +174,7 @@ export const useConnectionTest = () => {
 	 * Starts the connection test.
 	 * @param duration The duration of the test in seconds.
 	 */
-	const startConnectionTest = async (duration = 15): Promise<void> => {
+	const startConnectionTest = async (duration = 15) => {
 		setTestDuration(duration);
 		setConnectionTestState('starting');
 	};

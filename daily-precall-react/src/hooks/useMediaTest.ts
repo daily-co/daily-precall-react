@@ -1,34 +1,11 @@
-import { StatefulDevice, useDevices } from '@daily-co/daily-react';
-import { DailyCameraError } from '@daily-co/daily-js';
+import { useDevices } from '@daily-co/daily-react';
 import { useDailyTest } from '../DailyTest.tsx';
 import { v4 as uuidv4 } from 'uuid';
-
-export interface CameraTestReport {
-	camError?: DailyCameraError | null | string;
-	camState?: string;
-	cameras?: StatefulDevice[] | null;
-	hasCamError?: boolean;
-	selectedCamera?: MediaDeviceInfo | NonNullable<unknown>;
-	id?: string;
-	startedAt?: Date;
-}
-
-export interface SpeakerTestReport {
-	selectedSpeaker?: MediaDeviceInfo | NonNullable<unknown>;
-	speakers?: StatefulDevice[] | null;
-	id?: string;
-	startedAt?: Date;
-}
-
-export interface MicTestReport {
-	hasMicError?: boolean;
-	micError?: DailyCameraError | null | string;
-	micState?: string;
-	microphones?: StatefulDevice[] | null;
-	selectedMic?: MediaDeviceInfo | NonNullable<unknown>;
-	id?: string;
-	startedAt?: Date;
-}
+import {
+	CameraTestReport,
+	MicTestReport,
+	SpeakerTestReport,
+} from '../types.js';
 
 export const useMediaTest = () => {
 	const {

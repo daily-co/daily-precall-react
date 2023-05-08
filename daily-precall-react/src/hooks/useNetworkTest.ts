@@ -98,10 +98,8 @@ export const useNetworkTest = () => {
 		const handleNewState = async () => {
 			switch (networkTestState) {
 				case 'idle':
-					console.log('idle');
 					break;
 				case 'starting':
-					console.log('starting');
 					const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
 					const iceServers = await svcResp.json();
 					const testers = await Promise.all(
@@ -109,16 +107,12 @@ export const useNetworkTest = () => {
 							initiateProtocolTester(test, iceServers),
 						),
 					);
-					console.log({ testers });
 					setProtocolTesters(testers);
 					setNetworkTestState('running');
 					break;
 				case 'running':
-					console.log('running');
 					break;
 				case 'stopping':
-					console.log('stopping');
-
 					if (protocolTesters) {
 						await Promise.all(
 							protocolTesters.map((test: NetworkTester) => {
@@ -129,14 +123,11 @@ export const useNetworkTest = () => {
 					setNetworkTestState('finished');
 					break;
 				case 'finished':
-					console.log('finished');
-
 					if (testTimeout) clearTimeout(testTimeout);
 
 					setNetworkTestResults();
 					break;
 				case 'aborted':
-					console.log('aborted');
 					if (testTimeout) clearTimeout(testTimeout);
 					if (protocolTesters) {
 						protocolTesters.map((test: NetworkTester) => {
@@ -207,12 +198,16 @@ export const useNetworkTest = () => {
 		return instance;
 	}
 
-	const startNetworkTest = async (timeout = 10): Promise<any> => {
+	const startNetworkTest = async (timeout = 10) => {
 		setTestDuration(timeout);
 		setNetworkTestState('starting');
 	};
 
 	const stopNetworkTest = () => {
+		if (networkTestState === 'finished') {
+			// it's already finished so no need to do anything!
+			return;
+		}
 		setNetworkTestState('aborted');
 	};
 
