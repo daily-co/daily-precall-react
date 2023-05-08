@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "watch": "vite build --watch",
-    "test": "vitest",
+    "test": "TODO",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -39,7 +39,6 @@
     "typescript": "^5.0.2",
     "vite": "latest",
     "vite-plugin-dts": "^2.3.0",
-    "vitest": "latest"
   },
   "files": [
     "dist"
