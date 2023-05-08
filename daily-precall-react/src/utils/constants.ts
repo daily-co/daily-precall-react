@@ -15,7 +15,7 @@ export const NAT_SERVICES = {
 };
 
 export const NAT_SERVICES_LINKS = {
-	TWILIO: 'https://prod-ks.pluot.blue/tt-150331.json',
+	TWILIO: 'https://prod-ks.pluot.blue/tt-150331.json', // TODO: is this ok to expose?
 };
 
 export const CONNECTION_STATUS = {

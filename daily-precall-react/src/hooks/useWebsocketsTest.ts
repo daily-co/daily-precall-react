@@ -54,9 +54,6 @@ export const useWebsocketsTest = () => {
 		});
 
 	useEffect(() => {
-		// if (testTimeout) {
-		// 	clearTimeout(testTimeout);
-		// }
 		if (testDuration > 0) {
 			const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
 				setWebsocketsTestState('stopping');

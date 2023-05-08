@@ -15,6 +15,7 @@ export type TestRegions = (typeof testRegions)[number];
 
 export const startWebsocketTest = async (region: TestRegions) => {
 	try {
+		// TODO: is this okay to expose?
 		const apiResponse = await fetch(
 			`https://gs.daily.co/rooms/check/test-rooms/${region}`,
 		);
