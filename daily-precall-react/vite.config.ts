@@ -1,8 +1,7 @@
-/// <reference types="vitest" />
-/// <reference types="vite/client" />
-import path from 'node:path';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import path from 'node:path';
+import { defineConfig } from 'vitest/config';
+
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
@@ -17,8 +16,8 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'jsdom',
-		setupFiles: '@testing-library/jest-dom',
 	},
+	define: { global: 'window' },
 	build: {
 		lib: {
 			entry: path.resolve(__dirname, 'src/index.ts'),
