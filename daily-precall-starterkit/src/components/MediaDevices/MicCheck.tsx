@@ -131,13 +131,10 @@ export const MicCheck: React.FC = () => {
 				<>
 					<h2>Try making some noise!</h2>
 					<div>
-						<Button role="submit" onClick={() => switchTabs('network-check')}>
+						<Button onClick={() => switchTabs('network-check')}>
 							Skip this step
 						</Button>
-						<Button
-							role="submit"
-							onClick={toggleTroubleShooting}
-							variant="ghost">
+						<Button onClick={toggleTroubleShooting} variant="ghost">
 							I need help
 						</Button>
 					</div>
@@ -171,31 +168,31 @@ export const MicCheck: React.FC = () => {
 				<>
 					<h2>Your microphone works!</h2>
 					<div>
-						<Button role="submit" onClick={() => switchTabs('network-check')}>
-							Next
-						</Button>
+						<Button onClick={() => switchTabs('network-check')}>Next</Button>
 					</div>
 				</>
 			)}
 
 			{micAnalyser && <AudioVisualiser analyser={micAnalyser} />}
 
-			<form>
-				<label htmlFor="micOptions">Select your microphone:</label>
-				<select
-					name="micOptions"
-					id="micSelect"
-					defaultValue={selectedMicrophone?.device.label}
-					onChange={updateMicrophone}>
-					{microphones.map((mic) => (
-						<option
-							key={`mic-${mic.device.deviceId}`}
-							value={mic.device.deviceId}>
-							{mic.device.label}
-						</option>
-					))}
-				</select>
-			</form>
+			{microphones.length > 0 && (
+				<form>
+					<label htmlFor="micOptions">Select your microphone:</label>
+					<select
+						name="micOptions"
+						id="micSelect"
+						defaultValue={selectedMicrophone?.device.label}
+						onChange={updateMicrophone}>
+						{microphones.map((mic) => (
+							<option
+								key={`mic-${mic.device.deviceId}`}
+								value={mic.device.deviceId}>
+								{mic.device.label}
+							</option>
+						))}
+					</select>
+				</form>
+			)}
 		</Card>
 	);
 };

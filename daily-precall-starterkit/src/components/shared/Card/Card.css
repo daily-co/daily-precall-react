@@ -38,6 +38,6 @@
 	margin-bottom: 1rem;
 }
 
-.card > button[role=submit] {
+.card > .button-ghost {
 	margin-bottom: 1rem;
 }

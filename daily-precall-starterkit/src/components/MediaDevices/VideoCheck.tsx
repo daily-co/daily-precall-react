@@ -49,24 +49,18 @@ export const VideoCheck: React.FC = () => {
 			<h2>Can you see yourself?</h2>
 			{!hasCamError && (
 				<div>
-					<Button role="submit" onClick={() => switchTabs('speaker-check')}>
-						Yes
-					</Button>
-					<Button role="submit" onClick={showTroubleShootingToggle}>
-						No
-					</Button>
+					<Button onClick={() => switchTabs('speaker-check')}>Yes</Button>
+					<Button onClick={showTroubleShootingToggle}>No</Button>
 				</div>
 			)}
-			<Button
-				role="submit"
-				variant="ghost"
-				onClick={() => switchTabs('speaker-check')}>
+			<Button variant="ghost" onClick={() => switchTabs('speaker-check')}>
 				I can’t see the screen due to a visual impairment
 			</Button>
 
-			{/* The "Blocked", "in-use", and "not-found" errors are the most common user-related errors.
-					How to handle them differs per browser: the recovery path for a blocked camera is slightly different
-					on Firefox than it is in Chrome. Distinguishing between mobile and desktop devices is also key.*/}
+			{/*The "Blocked", "in-use", and "not-found" errors are the most common user-related errors.
+			How to handle them differs per browser: the recovery path for a blocked camera is slightly
+			different on Firefox than it is in Chrome, for example.
+			Distinguishing between mobile and desktop devices is also key.*/}
 			{hasCamError && (
 				<TroubleShooting
 					show={true}
@@ -148,16 +142,16 @@ export const VideoCheck: React.FC = () => {
 				</ul>
 			</TroubleShooting>
 
-			{/*This means the camera is still loading: it can sometimes take a second to fetch a user's devices.*/}
-			{camState !== 'granted' && !hasCamError ? (
-				<Loader />
-			) : (
-				<div className="videoElement">
-					{videoTrack.persistentTrack && (
+			<div className="videoElement">
+				{/*This means the camera is still loading: it can sometimes take a moment to fetch a user's device.*/}
+				{camState !== 'granted' && !hasCamError ? (
+					<Loader />
+				) : (
+					videoTrack.persistentTrack && (
 						<video autoPlay muted playsInline ref={videoElement} />
-					)}
-				</div>
-			)}
+					)
+				)}
+			</div>
 
 			{cameras.length > 0 && (
 				<form>

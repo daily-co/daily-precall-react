@@ -19,7 +19,7 @@ export const TroubleShooting: React.FC<React.PropsWithChildren<Props>> = ({
 		<TransitionGroup>
 			{show && (
 				<CSSTransition
-					classNames="slide"
+					classNames="troubleshooting-transition"
 					appear={show}
 					timeout={{
 						exit: 0,
@@ -30,11 +30,11 @@ export const TroubleShooting: React.FC<React.PropsWithChildren<Props>> = ({
 						<article>
 							{children}
 							<nav>
-								<Button role="submit" onClick={() => window.location.reload()}>
+								<Button onClick={() => window.location.reload()}>
 									Reload page
 								</Button>
 								{skipStep && (
-									<Button role="submit" variant="ghost" onClick={skipStep}>
+									<Button variant="ghost" onClick={skipStep}>
 										Skip step
 									</Button>
 								)}

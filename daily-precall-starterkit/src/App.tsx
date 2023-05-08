@@ -73,7 +73,7 @@ export const App = () => {
 				<Button onClick={() => switchTabs('websocket-check')} variant="tab">
 					WebSocket check
 				</Button>
-				<Button onClick={() => switchTabs('idle')} role="button" variant="tab">
+				<Button onClick={() => window.location.reload()} variant="tab">
 					Restart
 				</Button>
 			</nav>

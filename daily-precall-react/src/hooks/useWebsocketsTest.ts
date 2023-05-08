@@ -19,7 +19,6 @@ export const useWebsocketsTest = () => {
 	const [testTimeout, setTestTimeout] = useState<ReturnType<
 		typeof setTimeout
 	> | null>();
-	// const [networkInterval, setNetworkInterval] = useState<any>();
 	const [websocketRegionTestData, setWebsocketRegionTestData] =
 		useState<Regions>({
 			'eu-central-1': {
@@ -123,13 +122,8 @@ export const useWebsocketsTest = () => {
 					setWebsocketsTestState('running');
 					break;
 				case 'running':
-					// const n = setInterval(async () => {}, 1000);
-					// setNetworkInterval(n);
 					break;
 				case 'stopping':
-					// if (networkInterval) {
-					// 	clearInterval(networkInterval);
-					// }
 					if (testTimeout) {
 						clearTimeout(testTimeout);
 					}
@@ -138,22 +132,18 @@ export const useWebsocketsTest = () => {
 					setWebsocketsTestState('finished');
 					break;
 				case 'finished':
-					// if (networkInterval) clearInterval(networkInterval);
 					if (testTimeout) clearTimeout(testTimeout);
 					setWebsocketResults();
 					break;
 				case 'aborted':
-					// if (networkInterval) clearInterval(networkInterval);
 					if (testTimeout) clearTimeout(testTimeout);
+					setTestDuration(0);
+					setTestTimeout(null);
 					setWebsocketsTestState('idle');
 					break;
 			}
 		};
 		handleNewState();
-
-		// return () => {
-		// 	clearInterval(networkInterval);
-		// };
 	}, [websocketsTestState]);
 
 	const setWebsocketResults = () => {

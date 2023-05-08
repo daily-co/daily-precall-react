@@ -108,18 +108,11 @@ export const SpeakerCheck: React.FC = () => {
 		<Card title="Speakers">
 			<h2>Can you hear the sound?</h2>
 			<div>
-				<Button role="submit" onClick={() => switchTabs('mic-check')}>
-					Yes
-				</Button>
-				<Button role="submit" onClick={toggleTroubleShooting}>
-					No
-				</Button>
+				<Button onClick={() => switchTabs('mic-check')}>Yes</Button>
+				<Button onClick={toggleTroubleShooting}>No</Button>
 			</div>
 
-			<Button
-				role="submit"
-				variant="ghost"
-				onClick={() => switchTabs('mic-check')}>
+			<Button variant="ghost" onClick={() => switchTabs('mic-check')}>
 				I can’t hear the sound due to a hearing impairment
 			</Button>
 
@@ -149,22 +142,24 @@ export const SpeakerCheck: React.FC = () => {
 				Toggle playing test sound
 			</Button>
 
-			<form>
-				<label htmlFor="speakerOptions">Select your speakers:</label>
-				<select
-					name="speakerOptions"
-					id="speakerSelect"
-					defaultValue={selectedSpeaker?.device.label}
-					onChange={updateSpeakers}>
-					{speakers.map((speaker) => (
-						<option
-							key={`speaker-${speaker.device.deviceId}`}
-							value={speaker.device.deviceId}>
-							{speaker.device.label}
-						</option>
-					))}
-				</select>
-			</form>
+			{speakers.length > 0 && (
+				<form>
+					<label htmlFor="speakerOptions">Select your speakers:</label>
+					<select
+						name="speakerOptions"
+						id="speakerSelect"
+						defaultValue={selectedSpeaker?.device.label}
+						onChange={updateSpeakers}>
+						{speakers.map((speaker) => (
+							<option
+								key={`speaker-${speaker.device.deviceId}`}
+								value={speaker.device.deviceId}>
+								{speaker.device.label}
+							</option>
+						))}
+					</select>
+				</form>
+			)}
 		</Card>
 	);
 };

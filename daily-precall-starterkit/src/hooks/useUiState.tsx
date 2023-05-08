@@ -5,8 +5,8 @@ export type UIView =
 	| 'video-check' // check if video works
 	| 'speaker-check' // check if the speakers work
 	| 'mic-check' // check if the microphone works
-	| 'network-check' // a network check
-	| 'connection-check' // an internet connection strength check (throughput)
+	| 'network-check' // a network protocol check
+	| 'connection-check' // an internet connection strength check
 	| 'websocket-check'; // websocket check
 
 const uiViewState = atom<UIView | null>({
