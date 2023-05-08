@@ -162,7 +162,9 @@ export const useConnectionTest = () => {
 		return () => {
 			if (networkInterval) clearInterval(networkInterval);
 		};
-		// @TODO: fix dependencies
+
+		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
+		// Not sure how to fix 🤔
 	}, [
 		connectionTestState,
 		addError,

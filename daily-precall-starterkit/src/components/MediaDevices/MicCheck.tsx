@@ -193,6 +193,11 @@ export const MicCheck: React.FC = () => {
 					</select>
 				</form>
 			)}
+
+			<details>
+				<summary>Raw microphone data</summary>
+				<pre>{JSON.stringify(microphones, null, 2)}</pre>
+			</details>
 		</Card>
 	);
 };

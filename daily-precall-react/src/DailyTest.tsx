@@ -6,9 +6,6 @@ import {
 	ConnectionTestReport,
 	NetworkTestReport,
 	WebsocketsTestReport,
-	CameraTestReport,
-	MicTestReport,
-	SpeakerTestReport,
 } from './types.ts';
 
 export type TestState =
@@ -29,9 +26,6 @@ type TestDataKey =
 	| 'websockets';
 
 interface DailyTestData {
-	camera?: CameraTestReport;
-	speaker?: SpeakerTestReport;
-	mic?: MicTestReport;
 	network?: NetworkTestReport;
 	connection?: ConnectionTestReport;
 	websockets?: WebsocketsTestReport;
@@ -42,13 +36,7 @@ export interface ContextValue {
 	callObject: DailyCall | null;
 	addTestData(
 		key: TestDataKey,
-		data:
-			| CameraTestReport
-			| SpeakerTestReport
-			| MicTestReport
-			| NetworkTestReport
-			| ConnectionTestReport
-			| WebsocketsTestReport,
+		data: NetworkTestReport | ConnectionTestReport | WebsocketsTestReport,
 	): void;
 }
 

@@ -28,8 +28,9 @@ export const useNetworkTest = () => {
 	const [errors, setErrors] = useState<ErrorEvent[]>([]);
 	const [networkTestState, setNetworkTestState] = useState<TestState>('idle');
 	const [testDuration, setTestDuration] = useState<number>(0);
-	const [testTimeout, setTestTimeout] =
-		useState<ReturnType<typeof setTimeout>>();
+	const [testTimeout, setTestTimeout] = useState<ReturnType<
+		typeof setTimeout
+	> | null>();
 
 	const [protocolTesters, setProtocolTesters] = useState<NetworkTester[]>();
 	const [protocolTestData, setProtocolTestData] = useState<Protocols>({
@@ -134,12 +135,15 @@ export const useNetworkTest = () => {
 							test.stop();
 						});
 					}
+					setTestTimeout(null);
 					setNetworkTestState('idle');
 					setErrors([]);
 					break;
 			}
 		};
 		handleNewState();
+		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
+		// Not sure how to fix 🤔
 	}, [networkTestState]);
 
 	const setNetworkTestResults = () => {
@@ -205,7 +209,6 @@ export const useNetworkTest = () => {
 
 	const stopNetworkTest = () => {
 		if (networkTestState === 'finished') {
-			// it's already finished so no need to do anything!
 			return;
 		}
 		setNetworkTestState('aborted');

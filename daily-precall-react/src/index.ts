@@ -1,4 +1,3 @@
-export { useMediaTest } from './hooks/useMediaTest.ts';
 export { useNetworkTest } from './hooks/useNetworkTest.ts';
 export { useWebsocketsTest } from './hooks/useWebsocketsTest.ts';
 export { useConnectionTest } from './hooks/useConnectionTest.ts';

@@ -160,6 +160,11 @@ export const SpeakerCheck: React.FC = () => {
 					</select>
 				</form>
 			)}
+
+			<details>
+				<summary>Raw speakers data</summary>
+				<pre>{JSON.stringify(speakers, null, 2)}</pre>
+			</details>
 		</Card>
 	);
 };

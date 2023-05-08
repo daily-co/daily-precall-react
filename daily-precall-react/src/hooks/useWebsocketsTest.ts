@@ -54,9 +54,9 @@ export const useWebsocketsTest = () => {
 		});
 
 	useEffect(() => {
-		if (testTimeout) {
-			clearTimeout(testTimeout);
-		}
+		// if (testTimeout) {
+		// 	clearTimeout(testTimeout);
+		// }
 		if (testDuration > 0) {
 			const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
 				setWebsocketsTestState('stopping');
@@ -143,6 +143,8 @@ export const useWebsocketsTest = () => {
 					break;
 			}
 		};
+		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
+		// Not sure how to fix 🤔
 		handleNewState();
 	}, [websocketsTestState]);
 
@@ -185,7 +187,6 @@ export const useWebsocketsTest = () => {
 
 	const stopWebsocketsTest = () => {
 		if (websocketsTestState === 'finished') {
-			// it's already finished so no need to do anything!
 			return;
 		}
 		setWebsocketsTestState('aborted');

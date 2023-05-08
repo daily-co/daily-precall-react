@@ -170,6 +170,11 @@ export const VideoCheck: React.FC = () => {
 					</select>
 				</form>
 			)}
+
+			<details>
+				<summary>Raw camera data</summary>
+				<pre>{JSON.stringify(cameras, null, 2)}</pre>
+			</details>
 		</Card>
 	);
 };
