@@ -1,11 +1,11 @@
-~~# About
+# About
 
 Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
 a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
 
 # Usage
-It's easiest to you'll need to install both `daily-precall-react` and `daily-react` since you'll need access to a `callObject` in order
-to run the tests. You can get started by first including `DailyProvider` in your app:
+You'll need to install both `daily-precall-react` and [`daily-react`](https://docs.daily.co/reference/daily-react) since you'll need access to a `callObject` in order
+to run the tests. You can get started by first including [`DailyProvider`](https://docs.daily.co/reference/daily-react/daily-provider) in your app:
 
 ```typescript jsx
 import { useEffect, useState } from 'react';
@@ -36,10 +36,10 @@ Then inside your `App` include `DailyTestProvider`:
 
 ```typescript jsx
 import { DailyProvider, useDaily } from '@daily-co/daily-react';
-import { DailyTestProvider, useDailyTest, useConnectionTest } from '@daily-co/daily-react-precall';
+import { DailyTestProvider, useDailyTest, useConnectionTest } from 
+'@daily-co/daily-react-precall';
 
 function Tests() {
-  // will return the same call object we created in App()
   const callObject = useDaily();
   const { testData } = useDailyTest();
   const { startConnectionTest } = useConnectionTest();
