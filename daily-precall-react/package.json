@@ -38,7 +38,7 @@
     "prettier": "^2.8.8",
     "typescript": "^5.0.2",
     "vite": "latest",
-    "vite-plugin-dts": "^2.3.0",
+    "vite-plugin-dts": "^2.3.0"
   },
   "files": [
     "dist"
