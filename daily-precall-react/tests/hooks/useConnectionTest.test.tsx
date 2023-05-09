@@ -1,5 +1,3 @@
-// @vitest-environment jsdom
-
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import { renderHook } from '@testing-library/react-hooks';
 
