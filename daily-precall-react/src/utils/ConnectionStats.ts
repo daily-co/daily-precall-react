@@ -1,5 +1,5 @@
 import ConnectionTester from './ConnectionTester.ts';
-import { IceServerInterface, RTCStatsReportStat } from '../types.ts';
+import { IceServerInterface, RTCStatsReportStat, Throughput } from '../types.ts';
 
 export default class ConnectionStats {
 	intervalId: string;
@@ -166,10 +166,7 @@ const RTT_WARNING = 0.7;
 const PACKETLOSS_LIMIT = 10;
 const PACKETLOSS_WARNING = 5;
 
-export const getResultFromNetworkTest = (networkStats: {
-	maxRTT: number;
-	packetLoss: number;
-}) => {
+export const getResultFromNetworkTest = (networkStats: Throughput) => {
 	const result = {
 		rtt: '',
 		packetLoss: '',
@@ -195,19 +192,14 @@ export const getResultFromNetworkTest = (networkStats: {
 			break;
 	}
 
-	switch (true) {
-		case networkStats.packetLoss >= PACKETLOSS_LIMIT:
+	if (typeof networkStats.packetLoss !== 'undefined') {
+		if (networkStats.packetLoss >= PACKETLOSS_LIMIT) {
 			result.packetLoss = 'bad';
-			break;
-		case networkStats.packetLoss >= PACKETLOSS_WARNING:
+		} else if (networkStats.packetLoss >= PACKETLOSS_WARNING) {
 			result.packetLoss = 'warning';
-			break;
-
-		case networkStats.packetLoss < PACKETLOSS_WARNING:
+		} else if (networkStats.packetLoss < PACKETLOSS_WARNING) {
 			result.packetLoss = 'good';
-			break;
-		default:
-			break;
+		}
 	}
 	const good = result.packetLoss === 'good' && result.rtt === 'good';
 

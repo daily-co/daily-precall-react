@@ -1,82 +1,57 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectionTestReport } from '../types.ts';
 import { TestState, useDailyTest } from '../DailyTest.tsx';
-import { ErrorEvent } from '../types.ts';
 import ConnectionStats, {
 	getResultFromNetworkTest,
 } from '../utils/ConnectionStats.ts';
 import { NAT_SERVICES_LINKS } from '../utils/constants.ts';
 import { v4 as uuidv4 } from 'uuid';
+import { useCatchErrors } from '../utils/useCatchErrors.ts';
+
+const initialThroughputTestData: ConnectionTestReport['throughput'] = {
+	maxRTT: 0,
+	packetLoss: 0,
+};
+const initialThroughputTestResult: ConnectionTestReport['result'] = undefined;
 
 export const useConnectionTest = () => {
-	const { addTestData, callObject } = useDailyTest();
+	const { addTestData } = useDailyTest();
 
-	const [errors, setErrors] = useState<ErrorEvent[]>([]);
+	const prevState = useRef<TestState>('idle');
 	const [connectionTestState, setConnectionTestState] =
 		useState<TestState>('idle');
-	const [testDuration, setTestDuration] = useState<number>(0);
-	const [testTimeout, setTestTimeout] = useState<ReturnType<
-		typeof setTimeout
-	> | null>();
-	const [networkInterval, setNetworkInterval] = useState<ReturnType<
-		typeof setTimeout
-	> | null>();
-	const [timeElapsed, setTimeElapsed] = useState<number>(0 - testDuration);
+	const testDuration = useRef<number>(0);
+	const testTimeout = useRef<ReturnType<typeof setTimeout>>();
+	const networkInterval = useRef<ReturnType<typeof setInterval>>();
+	const [timeElapsed, setTimeElapsed] = useState<number>(
+		0 - testDuration.current,
+	);
 
-	const localParticipant = callObject?.participants().local;
-	const audioTrack = localParticipant?.tracks?.audio;
-	const videoTrack = localParticipant?.tracks?.video;
+	const mediaStreamRef = useRef<MediaStream>();
 
-	const [connectionStatsTester, setConnectionStatsTester] =
-		useState<ConnectionStats | null>();
-	const [throughputTestData, setThroughputTestData] = useState<
-		ConnectionTestReport['throughput']
-	>({
-		maxRTT: 0,
-		packetLoss: 0,
-	});
-	const [throughputTestResult, setThroughputTestResult] =
-		useState<ConnectionTestReport['result']>('');
+	const connectionStatsTester = useRef<ConnectionStats>();
+	const throughputTestData = useRef(initialThroughputTestData);
+	const throughputTestResult = useRef<ConnectionTestReport['result']>(
+		initialThroughputTestResult,
+	);
+
+	const { addError, errors } = useCatchErrors();
 
 	useEffect(() => {
-		if (testTimeout) clearTimeout(testTimeout);
-		if (testDuration > 0) {
-			const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
-				setConnectionTestState('stopping');
-			}, testDuration * 1000);
-			setTestTimeout(newTimeout);
-		}
-	}, [testDuration]);
+		if (timeElapsed < testDuration.current || !timeElapsed) return;
+		setConnectionTestState('stopping');
+	}, [timeElapsed]);
 
-	const addError = useCallback((error: any) => {
-		const newError: ErrorEvent = {
-			timestamp: new Date(),
-			error,
+	const setConnectionTestResults = useCallback(() => {
+		const results: ConnectionTestReport = {
+			errors: errors,
+			id: uuidv4(),
+			result: throughputTestResult.current,
+			startedAt: new Date(),
+			throughput: throughputTestData.current,
 		};
-		setErrors((prevState) => [...prevState, newError]);
-	}, []);
-
-	useEffect(() => {
-		if (!callObject) return;
-		callObject.on('error', addError);
-		callObject.on('nonfatal-error', addError);
-
-		return function cleanup() {
-			callObject.off('error', addError);
-			callObject.off('nonfatal-error', addError);
-		};
-	}, [addError, callObject]);
-
-	const setConnectionTestResults = () => {
-		const results: ConnectionTestReport = {};
-		results.errors = errors;
-		results.id = uuidv4();
-		results.result = throughputTestResult;
-		results.startedAt = new Date();
-		results.throughput = throughputTestData;
-
 		addTestData('connection', results);
-	};
+	}, [addTestData, errors]);
 
 	useEffect(() => {
 		const handleNewState = async () => {
@@ -84,25 +59,23 @@ export const useConnectionTest = () => {
 				case 'idle':
 					break;
 				case 'starting':
-					const stream = new MediaStream();
-					if (audioTrack?.persistentTrack) {
-						stream.addTrack(audioTrack.persistentTrack);
-					} else {
+					if (!mediaStreamRef.current) return;
+					const hasAudioTracks = mediaStreamRef.current?.getAudioTracks().length;
+					const hasVideoTracks = mediaStreamRef.current?.getVideoTracks().length;
+					if (!hasAudioTracks) {
 						addError(
 							'No audio track found: this may affect the throughput test results.',
 						);
 					}
-					if (videoTrack?.persistentTrack) {
-						stream.addTrack(videoTrack.persistentTrack);
-					} else {
+					if (!hasVideoTracks) {
 						addError(
 							'No video track found: this may affect the throughput test results.',
 						);
 					}
 
-					if (!videoTrack?.persistentTrack && !audioTrack?.persistentTrack) {
+					if (!hasVideoTracks && !hasAudioTracks) {
 						addError(
-							'No audio and video tracks found: cannot create media stream needed to measure throughput.',
+							'No audio and video tracks found: cannot measure throughput.',
 						);
 						setConnectionTestState('stopping');
 						return;
@@ -112,93 +85,86 @@ export const useConnectionTest = () => {
 					const svcResp = await fetch(service);
 					const iceServers = await svcResp.json();
 
-					const connectionTester = new ConnectionStats({
+					connectionStatsTester.current = new ConnectionStats({
 						iceServers: iceServers,
-						mediaStream: stream,
+						mediaStream: mediaStreamRef.current,
 						limitSamples: false,
 					});
 
-					await connectionTester.startContinuouslySampling();
-					setConnectionStatsTester(connectionTester);
+					await connectionStatsTester.current.startContinuouslySampling();
 					setConnectionTestState('running');
 					break;
 				case 'running':
-					const n = setInterval(async () => {
-						const sample = await connectionStatsTester?.getSample();
+					networkInterval.current = setInterval(async () => {
+						if (!connectionStatsTester.current) return;
 
-						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-						// @ts-ignore
-						setThroughputTestData(sample);
+						const sample = await connectionStatsTester.current.getSample();
+						throughputTestData.current = sample;
 						setTimeElapsed((count) => count + 1);
 
-						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-						// @ts-ignore
 						const verdict = getResultFromNetworkTest(sample);
-						setThroughputTestResult(verdict);
+						throughputTestResult.current = verdict;
 					}, 1000);
-					setNetworkInterval(n);
 					break;
 				case 'stopping':
-					connectionStatsTester?.stopSampling();
-					if (networkInterval) {
-						clearInterval(networkInterval);
-					}
-					if (testTimeout) {
-						clearTimeout(testTimeout);
-					}
-					setTestDuration(0);
-					setTestTimeout(null);
-					setConnectionStatsTester(null);
+					connectionStatsTester.current?.stopSampling();
+					clearInterval(networkInterval.current);
+					clearTimeout(testTimeout.current);
+					testDuration.current = 0;
 					setConnectionTestState('finished');
+					break;
+				case 'finished': {
+					if (prevState.current === 'finished') return;
+					setConnectionTestResults();
+					delete testTimeout.current;
+					delete connectionStatsTester.current;
+					throughputTestData.current = initialThroughputTestData;
+					throughputTestResult.current = initialThroughputTestResult;
 					setTimeElapsed(0);
 					break;
-				case 'finished':
-					setConnectionTestResults();
-					break;
+				}
 			}
+			prevState.current = connectionTestState;
 		};
 		handleNewState();
 
 		return () => {
-			if (networkInterval) clearInterval(networkInterval);
+			clearInterval(networkInterval.current);
 		};
 
 		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
 		// Not sure how to fix 🤔
 	}, [
-		connectionTestState,
 		addError,
-		videoTrack?.persistentTrack,
-		audioTrack?.persistentTrack,
+		connectionTestState,
+		setConnectionTestResults,
 	]);
 
 	/**
 	 * Starts the connection test.
 	 * @param duration The duration of the test in seconds.
 	 */
-	const startConnectionTest = async (duration = 15) => {
-		setTestDuration(duration);
+	const startConnectionTest = useCallback(async (mediaStream: MediaStream, duration = 15) => {
+		mediaStreamRef.current = mediaStream;
+		testDuration.current = duration;
 		setConnectionTestState('starting');
-	};
+	}, []);
 
 	/**
 	 * Stops the connection test.
 	 */
-	const stopConnectionTest = () => {
+	const stopConnectionTest = useCallback(() => {
 		if (connectionTestState === 'finished') {
 			// it's already finished so no need to do anything!
 			return;
 		}
 		setConnectionTestState('stopping');
-	};
-
-	const hasStreams = videoTrack?.persistentTrack && audioTrack?.persistentTrack;
+	}, [connectionTestState]);
 
 	return {
 		connectionTestState,
 		startConnectionTest,
 		stopConnectionTest,
-		hasStreams,
 		timeElapsed,
 	};
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
 	useConnectionTest,
 	useDailyTest,
@@ -7,8 +7,9 @@ import {
 import { Card } from '../shared/Card/Card';
 import { Button } from '../shared/Button/Button';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
+import { useLocalSessionId, useMediaTrack } from '@daily-co/daily-react';
 
-const TEST_DURATION = 10;
+const TEST_DURATION = 5;
 export const ConnectionCheck: React.FC = () => {
 	const { testData } = useDailyTest();
 
@@ -17,8 +18,24 @@ export const ConnectionCheck: React.FC = () => {
 		timeElapsed,
 		stopConnectionTest,
 		connectionTestState,
-		hasStreams,
 	} = useConnectionTest();
+
+	const localSessionId = useLocalSessionId() ?? '';
+	const audioTrack = useMediaTrack(localSessionId, 'audio');
+	const videoTrack = useMediaTrack(localSessionId, 'video');
+
+	const mediaStream = useRef<MediaStream>();
+	useEffect(() => {
+		mediaStream.current = new MediaStream();
+		if (audioTrack.persistentTrack) mediaStream.current.addTrack(audioTrack.persistentTrack);
+		if (videoTrack.persistentTrack) mediaStream.current.addTrack(videoTrack.persistentTrack);
+
+		return () => {
+			delete mediaStream.current;
+		}
+	}, [audioTrack.persistentTrack, videoTrack.persistentTrack]);
+
+	const hasStreams = mediaStream.current?.getTracks().length === 2;
 
 	const tips = () => {
 		return (
@@ -123,7 +140,7 @@ export const ConnectionCheck: React.FC = () => {
 				<>
 					<div>
 						<Button
-							onClick={() => startConnectionTest(TEST_DURATION)}
+							onClick={() => startConnectionTest(mediaStream.current as MediaStream, TEST_DURATION)}
 							disabled={
 								connectionTestState === 'running' ||
 								connectionTestState === 'starting' ||
