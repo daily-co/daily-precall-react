@@ -20,7 +20,6 @@ export default defineConfig({
 			formats: ['es', 'umd'],
 			fileName: (format) => `daily-precall-react.${format}.js`,
 		},
-
 		rollupOptions: {
 			external: ['react', 'react-dom'],
 			output: {
