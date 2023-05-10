@@ -43,19 +43,13 @@ export default class ConnectionTester {
 		this.localPeer = new RTCPeerConnection(rtcConfig);
 		this.remotePeer = new RTCPeerConnection(rtcConfig);
 
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		global.localPeer = this.localPeer;
-
 		// There is a bug where if you add ice candidates before setRemoteDescription, the PC fails.
 		this.localPeer.bufferedIceCandidates = [];
 		this.remotePeer.bufferedIceCandidates = [];
 
 		this.setupPeerListeners();
 		await this.start();
-		return new Promise((resolve, reject) => {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
+		return new Promise<void>((resolve, reject) => {
 			this.connectionEstablished = resolve;
 			this.connectionFailed = reject;
 			this.connectionTimeout = global.setTimeout(this.connectionFailed, 15000);

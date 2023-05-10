@@ -149,18 +149,17 @@ export default class ConnectionStats {
 		this.closeConnection();
 	}
 
-	mapToObj(m: RTCStatsReport) {
-		if (!m.entries) {
-			return m;
+	mapToObj(statsReport: RTCStatsReport) {
+		if (!statsReport.entries) {
+			return statsReport;
 		}
 
-		const o = {};
-		m.forEach((v, k) => {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
-			o[k] = v;
+		const newObject: { [key: string]: string } = {};
+		statsReport.forEach((value, key) => {
+			newObject[key] = value;
 		});
-		return o;
+
+		return newObject;
 	}
 }
 
@@ -180,19 +179,14 @@ export const getResultFromNetworkTest = (networkStats: Throughput) => {
 		return 'failed';
 	}
 
-	switch (true) {
-		case networkStats.maxRTT >= RTT_LIMIT:
+	if (typeof networkStats.maxRTT !== 'undefined') {
+		if (networkStats.maxRTT >= RTT_LIMIT) {
 			result.rtt = 'bad';
-			break;
-		case networkStats.maxRTT >= RTT_WARNING:
+		} else if (networkStats.maxRTT >= RTT_WARNING) {
 			result.rtt = 'warning';
-			break;
-
-		case networkStats.maxRTT < RTT_WARNING:
+		} else if (networkStats.maxRTT < RTT_WARNING) {
 			result.rtt = 'good';
-			break;
-		default:
-			break;
+		}
 	}
 
 	if (typeof networkStats.packetLoss !== 'undefined') {
@@ -204,6 +198,7 @@ export const getResultFromNetworkTest = (networkStats: Throughput) => {
 			result.packetLoss = 'good';
 		}
 	}
+
 	const good = result.packetLoss === 'good' && result.rtt === 'good';
 
 	const bad =

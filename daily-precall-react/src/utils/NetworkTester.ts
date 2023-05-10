@@ -51,20 +51,17 @@ export default class NetworkTester {
 			case 'stun':
 				this.iceServers = iceServers.filter(
 					(url) =>
-						Boolean(url?.url?.startsWith('stun:')) ||
-						url?.urls?.startsWith('stun:'),
+						url?.url?.startsWith('stun:') || url?.urls?.startsWith('stun:'),
 				);
 				break;
 			case 'turn-udp':
 				this.iceServers = iceServers.filter(
-					(url) =>
-						Boolean(url?.url?.startsWith('turn:')) && url?.url?.endsWith('udp'),
+					(url) => url?.url?.startsWith('turn:') && url?.url?.endsWith('udp'),
 				);
 				break;
 			case 'turn-tcp':
 				this.iceServers = iceServers.filter(
-					(url) =>
-						Boolean(url?.url?.startsWith('turn:')) && url?.url?.endsWith('tcp'),
+					(url) => url?.url?.startsWith('turn:') && url?.url?.endsWith('tcp'),
 				);
 				break;
 			case 'turn-tls':
@@ -110,10 +107,6 @@ export default class NetworkTester {
 		this.remotePeer = <RTCPeerConnectionWithBuffers>(
 			new RTCPeerConnection(rtcConfig)
 		);
-
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		global.localPeer = this.localPeer;
 
 		// There is a bug where if you add ice candidates before setRemoteDescription, the PC fails.
 		this.localPeer.bufferedIceCandidates = [];
