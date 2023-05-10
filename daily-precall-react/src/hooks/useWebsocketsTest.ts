@@ -4,7 +4,7 @@ import { TestState, useDailyTest } from '../DailyTest.tsx';
 import { WebsocketsTestReport } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.js';
-import useTimeout from '../utils/useTimeout.js';
+import { useTimeout } from '../utils/useTimeout.js';
 
 type Regions = {
 	[key in TestRegions]?: {

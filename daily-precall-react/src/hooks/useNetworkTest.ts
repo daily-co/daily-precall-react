@@ -11,7 +11,7 @@ import {
 import NetworkTester from '../utils/NetworkTester.ts';
 import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.js';
-import useTimeout from '../utils/useTimeout.js';
+import { useTimeout } from '../utils/useTimeout.js';
 
 type Protocols = {
 	[key in ConnectionModes]?: {
