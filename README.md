@@ -2,13 +2,13 @@
 Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
 a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
 
-# Running locally
+# Running locally 
 This repo uses Yarn workspaces.
 ```bash
 # clone repo
 git clone git@github.com:daily-co/daily-precall-react.git
 
-# install dependencies
+# install dependencies (do this in the root folder :-))
 cd daily-precall-react yarn
 
 # run library
@@ -18,6 +18,15 @@ yarn watch-lib
 yarn watch-app
 ```
 Any changes made in the library will be automatically picked up in the app.
+
+# Installation
+```bash
+# connection and device checks
+yarn install @daily-co/daily-react-precall @daily-co/daily-js @daily-co/daily-react recoil
+```
+
+Notice that both `@daily-co/daily-react` and `@daily-co/daily-react-precall` require `@daily-co/daily-js` as a peer dependency, and that
+`@daily-co/daily-react` requires `recoil` as a peer dependency.
 
 # Usage
 You'll need to install both `daily-precall-react` and [`daily-react`](https://docs.daily.co/reference/daily-react) since you'll need access to a `callObject` in order
@@ -72,15 +81,6 @@ function Tests() {
 }
 ```
 Learn more about Daily Precall React by reading our docs at [TODO].
-
-# Installation
-```bash
-# connection and device checks
-yarn install @daily-co/daily-react-precall @daily-co/daily-js @daily-co/daily-react recoil
-```
-
-Notice that both `@daily-co/daily-react` and `@daily-co/daily-react-precall` require `@daily-co/daily-js` as a peer dependency, and that
-`@daily-co/daily-react` requires `recoil` as a peer dependency.
 
 
 # Tests

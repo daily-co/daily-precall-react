@@ -45,7 +45,6 @@ export interface NetworkTestReport {
 	id?: string;
 	result?: 'failed' | 'warning' | 'passed' | '';
 	startedAt?: Date;
-	successRate?: number;
 }
 
 export interface WebsocketsTestReport {

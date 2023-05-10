@@ -6,7 +6,7 @@ import { RecoilRoot } from 'recoil';
 
 type Props = {
 	callObject: DailyCall | null;
-	children: React.ReactNode;
+	children?: React.ReactNode;
 };
 export const DailyTestProvider: React.FC<React.PropsWithChildren<Props>> = ({
 	children,
@@ -29,7 +29,7 @@ export const DailyTestProvider: React.FC<React.PropsWithChildren<Props>> = ({
 		handleNewMeetingState();
 		callObject?.on('left-meeting' as DailyEvent, handleNewMeetingState);
 
-		callObject.startCamera();
+		callObject.startCamera().then(() => console.log('===camera started==='));
 
 		// Stop listening for changes in state
 		return () => {

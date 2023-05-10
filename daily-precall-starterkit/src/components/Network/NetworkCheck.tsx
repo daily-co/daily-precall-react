@@ -8,7 +8,7 @@ import {
 import { Card } from '../shared/Card/Card';
 import { Button } from '../shared/Button/Button';
 
-const TEST_TIMEOUT = 10;
+const TEST_TIMEOUT = 5;
 export const NetworkCheck: React.FC = () => {
 	const { testData } = useDailyTest();
 

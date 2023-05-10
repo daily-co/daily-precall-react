@@ -27,15 +27,17 @@ export const ConnectionCheck: React.FC = () => {
 	const mediaStream = useRef<MediaStream>();
 	useEffect(() => {
 		mediaStream.current = new MediaStream();
-		if (audioTrack.persistentTrack) mediaStream.current.addTrack(audioTrack.persistentTrack);
-		if (videoTrack.persistentTrack) mediaStream.current.addTrack(videoTrack.persistentTrack);
+		if (audioTrack.persistentTrack)
+			mediaStream.current.addTrack(audioTrack.persistentTrack);
+		if (videoTrack.persistentTrack)
+			mediaStream.current.addTrack(videoTrack.persistentTrack);
 
 		return () => {
 			delete mediaStream.current;
-		}
+		};
 	}, [audioTrack.persistentTrack, videoTrack.persistentTrack]);
 
-	const hasStreams = mediaStream.current?.getTracks().length === 2;
+	const hasStreams = audioTrack || videoTrack;
 
 	const tips = () => {
 		return (
@@ -140,7 +142,12 @@ export const ConnectionCheck: React.FC = () => {
 				<>
 					<div>
 						<Button
-							onClick={() => startConnectionTest(mediaStream.current as MediaStream, TEST_DURATION)}
+							onClick={() =>
+								startConnectionTest(
+									mediaStream.current as MediaStream,
+									TEST_DURATION,
+								)
+							}
 							disabled={
 								connectionTestState === 'running' ||
 								connectionTestState === 'starting' ||

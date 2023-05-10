@@ -21,7 +21,6 @@ export const useConnectionTest = () => {
 	const [connectionTestState, setConnectionTestState] =
 		useState<TestState>('idle');
 	const testDuration = useRef<number>(0);
-	const testTimeout = useRef<ReturnType<typeof setTimeout>>();
 	const networkInterval = useRef<ReturnType<typeof setInterval>>();
 	const [timeElapsed, setTimeElapsed] = useState<number>(
 		0 - testDuration.current,
@@ -60,8 +59,10 @@ export const useConnectionTest = () => {
 					break;
 				case 'starting':
 					if (!mediaStreamRef.current) return;
-					const hasAudioTracks = mediaStreamRef.current?.getAudioTracks().length;
-					const hasVideoTracks = mediaStreamRef.current?.getVideoTracks().length;
+					const hasAudioTracks =
+						mediaStreamRef.current?.getAudioTracks().length;
+					const hasVideoTracks =
+						mediaStreamRef.current?.getVideoTracks().length;
 					if (!hasAudioTracks) {
 						addError(
 							'No audio track found: this may affect the throughput test results.',
@@ -102,21 +103,18 @@ export const useConnectionTest = () => {
 						throughputTestData.current = sample;
 						setTimeElapsed((count) => count + 1);
 
-						const verdict = getResultFromNetworkTest(sample);
-						throughputTestResult.current = verdict;
+						throughputTestResult.current = getResultFromNetworkTest(sample);
 					}, 1000);
 					break;
 				case 'stopping':
 					connectionStatsTester.current?.stopSampling();
 					clearInterval(networkInterval.current);
-					clearTimeout(testTimeout.current);
 					testDuration.current = 0;
 					setConnectionTestState('finished');
 					break;
 				case 'finished': {
 					if (prevState.current === 'finished') return;
 					setConnectionTestResults();
-					delete testTimeout.current;
 					delete connectionStatsTester.current;
 					throughputTestData.current = initialThroughputTestData;
 					throughputTestResult.current = initialThroughputTestResult;
@@ -131,24 +129,20 @@ export const useConnectionTest = () => {
 		return () => {
 			clearInterval(networkInterval.current);
 		};
-
-		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
-		// Not sure how to fix 🤔
-	}, [
-		addError,
-		connectionTestState,
-		setConnectionTestResults,
-	]);
+	}, [addError, connectionTestState, setConnectionTestResults]);
 
 	/**
 	 * Starts the connection test.
 	 * @param duration The duration of the test in seconds.
 	 */
-	const startConnectionTest = useCallback(async (mediaStream: MediaStream, duration = 15) => {
-		mediaStreamRef.current = mediaStream;
-		testDuration.current = duration;
-		setConnectionTestState('starting');
-	}, []);
+	const startConnectionTest = useCallback(
+		async (mediaStream: MediaStream, duration = 15) => {
+			mediaStreamRef.current = mediaStream;
+			testDuration.current = duration;
+			setConnectionTestState('starting');
+		},
+		[],
+	);
 
 	/**
 	 * Stops the connection test.

@@ -10,6 +10,8 @@ module.exports = {
   plugins: ['react-refresh'],
   rules: {
     'react-refresh/only-export-components': 'warn',
-		'no-case-declarations': 0
+		'no-case-declarations': 0,
+		'no-var-requires': 0,
+		'no-mixed-spaces-and-tabs': 0
   },
 }

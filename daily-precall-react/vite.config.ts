@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import path from 'node:path';
+import * as path from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 

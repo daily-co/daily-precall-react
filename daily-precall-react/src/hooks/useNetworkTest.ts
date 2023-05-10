@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TestState, useDailyTest } from '../DailyTest.tsx';
-import { ErrorEvent, IceServerInterface, NetworkTestReport } from '../types.ts';
+import { IceServerInterface, NetworkTestReport } from '../types.ts';
 import {
 	CONNECTION_MODES,
 	CONNECTION_STATUS,
@@ -10,6 +10,8 @@ import {
 } from '../utils/constants.ts';
 import NetworkTester from '../utils/NetworkTester.ts';
 import { v4 as uuidv4 } from 'uuid';
+import { useCatchErrors } from '../utils/useCatchErrors.js';
+import useTimeout from '../utils/useTimeout.js';
 
 type Protocols = {
 	[key in ConnectionModes]?: {
@@ -23,77 +25,93 @@ interface TestResults {
 	status: string;
 }
 
-export const useNetworkTest = () => {
-	const { addTestData, callObject } = useDailyTest();
-	const [errors, setErrors] = useState<ErrorEvent[]>([]);
-	const [networkTestState, setNetworkTestState] = useState<TestState>('idle');
-	const [testDuration, setTestDuration] = useState<number>(0);
-	const [testTimeout, setTestTimeout] = useState<ReturnType<
-		typeof setTimeout
-	> | null>();
+/* Test will automatically time out after 30 seconds*/
+const TIME_OUT_IN_SECONDS = 30;
 
-	const [protocolTesters, setProtocolTesters] = useState<NetworkTester[]>();
-	const [protocolTestData, setProtocolTestData] = useState<Protocols>({
-		[CONNECTION_MODES.ALL]: {
-			result: null,
-			iceCandidates: null,
+const initialProtocolTestData = {
+	[CONNECTION_MODES.ALL]: {
+		result: null,
+		iceCandidates: null,
+	},
+	[CONNECTION_MODES.RELAY_ONLY]: {
+		result: null,
+		iceCandidates: null,
+	},
+	[CONNECTION_MODES.STUN]: {
+		result: null,
+		iceCandidates: null,
+	},
+	[CONNECTION_MODES.TURN_UDP]: {
+		result: null,
+		iceCandidates: null,
+	},
+	[CONNECTION_MODES.TURN_TCP]: {
+		result: null,
+		iceCandidates: null,
+	},
+	[CONNECTION_MODES.TURN_TLS]: {
+		result: null,
+		iceCandidates: null,
+	},
+};
+
+export const useNetworkTest = () => {
+	const { addTestData } = useDailyTest();
+	const [networkTestState, setNetworkTestState] = useState<TestState>('idle');
+	const prevState = useRef<TestState>('idle');
+
+	const [abortTimeout, setAbortTimeout] = useState(false);
+	const [hasTimeElapsed, setHasTimeElapsed] = useState(false);
+	useTimeout(
+		() => {
+			setHasTimeElapsed(true);
 		},
-		[CONNECTION_MODES.RELAY_ONLY]: {
-			result: null,
-			iceCandidates: null,
-		},
-		[CONNECTION_MODES.STUN]: {
-			result: null,
-			iceCandidates: null,
-		},
-		[CONNECTION_MODES.TURN_UDP]: {
-			result: null,
-			iceCandidates: null,
-		},
-		[CONNECTION_MODES.TURN_TCP]: {
-			result: null,
-			iceCandidates: null,
-		},
-		[CONNECTION_MODES.TURN_TLS]: {
-			result: null,
-			iceCandidates: null,
-		},
-	});
+		abortTimeout ? null : TIME_OUT_IN_SECONDS * 1000,
+	);
 
 	useEffect(() => {
-		if (testDuration > 0) {
-			const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
-				setNetworkTestState('stopping');
-			}, testDuration * 1000);
-			setTestTimeout(newTimeout);
-		}
-	}, [testDuration]);
+		hasTimeElapsed &&
+			networkTestState === 'running' &&
+			setNetworkTestState('stopping');
+	}, [hasTimeElapsed, networkTestState]);
+
+	const protocolTesters = useRef<NetworkTester[]>();
+	const [protocolTestData, setProtocolTestData] = useState<Protocols>(
+		initialProtocolTestData,
+	);
 
 	useEffect(() => {
 		const isDone = Object.keys(protocolTestData).every(
 			(key) => protocolTestData[key]?.result !== null,
 		);
-		if (isDone) setNetworkTestState('finished');
+		if (isDone) setNetworkTestState('stopping');
 	}, [protocolTestData]);
 
-	const addError = useCallback((error: any) => {
-		const newError: ErrorEvent = {
-			timestamp: new Date(),
-			error,
-		};
-		setErrors((prevState) => [...prevState, newError]);
-	}, []);
+	const { errors } = useCatchErrors();
 
-	useEffect(() => {
-		if (!callObject) return;
-		callObject.on('error', addError);
-		callObject.on('nonfatal-error', addError);
-
-		return function cleanup() {
-			callObject.off('error', addError);
-			callObject.off('nonfatal-error', addError);
+	const setNetworkTestResults = useCallback(() => {
+		const results: NetworkTestReport = {
+			connected: Object.keys(protocolTestData).filter(
+				(key) => protocolTestData[key]?.result === 'connected',
+			),
+			failed: Object.keys(protocolTestData).filter(
+				(key) => protocolTestData[key]?.result === 'failed',
+			),
+			id: uuidv4(),
+			startedAt: new Date(),
+			errors: errors,
+			result:
+				protocolTestData?.[CONNECTION_MODES.RELAY_ONLY]?.result ===
+				CONNECTION_STATUS.CONNECTED
+					? 'passed'
+					: protocolTestData?.[CONNECTION_MODES.RELAY_ONLY]?.result ===
+					  CONNECTION_STATUS.FAILED
+					? 'failed'
+					: 'warning',
 		};
-	}, [addError, callObject]);
+
+		addTestData('network', results);
+	}, [addTestData, errors, protocolTestData]);
 
 	useEffect(() => {
 		const handleNewState = async () => {
@@ -101,6 +119,7 @@ export const useNetworkTest = () => {
 				case 'idle':
 					break;
 				case 'starting':
+					console.log('starting');
 					const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
 					const iceServers = await svcResp.json();
 					const testers = await Promise.all(
@@ -108,75 +127,34 @@ export const useNetworkTest = () => {
 							initiateProtocolTester(test, iceServers),
 						),
 					);
-					setProtocolTesters(testers);
+					protocolTesters.current = testers;
 					setNetworkTestState('running');
 					break;
 				case 'running':
 					break;
 				case 'stopping':
-					if (protocolTesters) {
+					if (protocolTesters.current) {
 						await Promise.all(
-							protocolTesters.map((test: NetworkTester) => {
+							protocolTesters.current.map((test: NetworkTester) => {
 								test.stop();
 							}),
 						);
 					}
+
 					setNetworkTestState('finished');
 					break;
 				case 'finished':
-					if (testTimeout) clearTimeout(testTimeout);
-
+					if (prevState.current === 'finished') return;
 					setNetworkTestResults();
-					break;
-				case 'aborted':
-					if (testTimeout) clearTimeout(testTimeout);
-					if (protocolTesters) {
-						protocolTesters.map((test: NetworkTester) => {
-							test.stop();
-						});
-					}
-					setTestTimeout(null);
-					setNetworkTestState('idle');
-					setErrors([]);
+					delete protocolTesters.current;
+					setAbortTimeout(true);
+					setProtocolTestData(initialProtocolTestData);
 					break;
 			}
+			prevState.current = networkTestState;
 		};
 		handleNewState();
-		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
-		// Not sure how to fix 🤔
-	}, [networkTestState]);
-
-	const setNetworkTestResults = () => {
-		const results: NetworkTestReport = {};
-		const connected = Object.keys(protocolTestData).filter(
-			(key) => protocolTestData[key]?.result === 'connected',
-		);
-		const failed = Object.keys(protocolTestData).filter(
-			(key) => protocolTestData[key]?.result === 'failed',
-		);
-
-		if (
-			protocolTestData[CONNECTION_MODES.RELAY_ONLY]?.result ===
-			CONNECTION_STATUS.CONNECTED
-		) {
-			results.result = 'passed';
-		} else if (
-			protocolTestData[CONNECTION_MODES.RELAY_ONLY]?.result ===
-			CONNECTION_STATUS.FAILED
-		) {
-			results.result = 'failed';
-		} else {
-			results.result = 'warning';
-		}
-
-		results.connected = connected;
-		results.errors = errors;
-		results.failed = failed;
-		results.id = uuidv4();
-		results.startedAt = new Date();
-
-		addTestData('network', results);
-	};
+	}, [networkTestState, protocolTestData, setNetworkTestResults]);
 
 	async function initiateProtocolTester(
 		connectionMode: ConnectionModes,
@@ -202,17 +180,16 @@ export const useNetworkTest = () => {
 		return instance;
 	}
 
-	const startNetworkTest = async (timeout = 10) => {
-		setTestDuration(timeout);
+	const startNetworkTest = useCallback(() => {
 		setNetworkTestState('starting');
-	};
+	}, []);
 
-	const stopNetworkTest = () => {
+	const stopNetworkTest = useCallback(() => {
 		if (networkTestState === 'finished') {
 			return;
 		}
-		setNetworkTestState('aborted');
-	};
+		setNetworkTestState('stopping');
+	}, [networkTestState]);
 
 	return {
 		startNetworkTest,

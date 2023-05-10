@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { startWebsocketTests, TestRegions } from '../utils/WebSocketTester.ts';
 import { TestState, useDailyTest } from '../DailyTest.tsx';
-import { ErrorEvent, WebsocketsTestReport } from '../types.ts';
+import { WebsocketsTestReport } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
+import { useCatchErrors } from '../utils/useCatchErrors.js';
+import useTimeout from '../utils/useTimeout.js';
 
 type Regions = {
 	[key in TestRegions]?: {
@@ -10,57 +12,66 @@ type Regions = {
 	};
 };
 
+/* Test will automatically time out after 30 seconds*/
+const TIME_OUT_IN_SECONDS = 30;
+
+const defaultWebsocketData = {
+	'eu-central-1': {
+		result: '',
+	},
+	'eu-west-2': {
+		result: '',
+	},
+	'us-east-1': {
+		result: '',
+	},
+	'ap-south-1': {
+		result: '',
+	},
+	'af-south-1': {
+		result: '',
+	},
+	'us-west-2': {
+		result: '',
+	},
+	'ap-southeast-1': {
+		result: '',
+	},
+	'sa-east-1': {
+		result: '',
+	},
+	'ap-northeast-2': {
+		result: '',
+	},
+	'ap-southeast-2': {
+		result: '',
+	},
+};
+
 export const useWebsocketsTest = () => {
-	const { addTestData, callObject } = useDailyTest();
-	const [errors, setErrors] = useState<ErrorEvent[]>([]);
+	const { addTestData } = useDailyTest();
+	const { errors } = useCatchErrors();
+
 	const [websocketsTestState, setWebsocketsTestState] =
 		useState<TestState>('idle');
-	const [testDuration, setTestDuration] = useState<number>(0);
-	const [testTimeout, setTestTimeout] = useState<ReturnType<
-		typeof setTimeout
-	> | null>();
-	const [websocketRegionTestData, setWebsocketRegionTestData] =
-		useState<Regions>({
-			'eu-central-1': {
-				result: '',
-			},
-			'eu-west-2': {
-				result: '',
-			},
-			'us-east-1': {
-				result: '',
-			},
-			'ap-south-1': {
-				result: '',
-			},
-			'af-south-1': {
-				result: '',
-			},
-			'us-west-2': {
-				result: '',
-			},
-			'ap-southeast-1': {
-				result: '',
-			},
-			'sa-east-1': {
-				result: '',
-			},
-			'ap-northeast-2': {
-				result: '',
-			},
-			'ap-southeast-2': {
-				result: '',
-			},
-		});
+	const prevState = useRef<TestState>('idle');
 
+	const [abortTimeout, setAbortTimeout] = useState(false);
+	const [hasTimeElapsed, setHasTimeElapsed] = useState(false);
+	useTimeout(
+		() => {
+			setHasTimeElapsed(true);
+		},
+		abortTimeout ? null : TIME_OUT_IN_SECONDS * 1000,
+	);
 	useEffect(() => {
-		if (testDuration > 0) {
-			const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
-				setWebsocketsTestState('stopping');
-			}, testDuration * 1000);
-			setTestTimeout(newTimeout);
-		}
-	}, [testDuration]);
+		hasTimeElapsed &&
+			websocketsTestState === 'running' &&
+			setWebsocketsTestState('stopping');
+	}, [hasTimeElapsed, websocketsTestState]);
+
+	const [websocketRegionTestData, setWebsocketRegionTestData] =
+		useState<Regions>(defaultWebsocketData);
 
 	useEffect(() => {
 		const isDone = Object.keys(websocketRegionTestData).every(
@@ -69,24 +80,37 @@ export const useWebsocketsTest = () => {
 		if (isDone) setWebsocketsTestState('finished');
 	}, [websocketRegionTestData]);
 
-	const addError = useCallback((error: any) => {
-		const newError: ErrorEvent = {
-			timestamp: new Date(),
-			error,
-		};
-		setErrors((prevState) => [...prevState, newError]);
-	}, []);
+	const setWebsocketResults = useCallback(() => {
+		const passed = Object.keys(websocketRegionTestData).filter(
+			(key) => websocketRegionTestData[key]?.result === 'passed',
+		);
 
-	useEffect(() => {
-		if (!callObject) return;
-		callObject.on('error', addError);
-		callObject.on('nonfatal-error', addError);
+		const failed = Object.keys(websocketRegionTestData).filter(
+			(key) => websocketRegionTestData[key]?.result === 'failed',
+		);
 
-		return function cleanup() {
-			callObject.off('error', addError);
-			callObject.off('nonfatal-error', addError);
+		let verdict = '';
+		const allWebsocketCount = Object.values(websocketRegionTestData).length;
+
+		if (failed.length === allWebsocketCount) {
+			verdict = 'failed';
+		} else if (failed.length > 0) {
+			verdict = 'warning';
+		} else {
+			verdict = 'passed';
+		}
+
+		const results: WebsocketsTestReport = {
+			errors: errors,
+			failed: failed,
+			id: uuidv4(),
+			passed: passed,
+			result: verdict,
+			startedAt: new Date(),
 		};
-	}, [callObject]);
+
+		addTestData('websockets', results);
+	}, [addTestData, errors, websocketRegionTestData]);
 
 	useEffect(() => {
 		const handleNewState = async () => {
@@ -121,73 +145,30 @@ export const useWebsocketsTest = () => {
 				case 'running':
 					break;
 				case 'stopping':
-					if (testTimeout) {
-						clearTimeout(testTimeout);
-					}
-					setTestDuration(0);
-					setTestTimeout(null);
 					setWebsocketsTestState('finished');
 					break;
 				case 'finished':
-					if (testTimeout) clearTimeout(testTimeout);
+					if (prevState.current === 'finished') return;
+					setAbortTimeout(true);
 					setWebsocketResults();
-					break;
-				case 'aborted':
-					if (testTimeout) clearTimeout(testTimeout);
-					setTestDuration(0);
-					setTestTimeout(null);
-					setWebsocketsTestState('idle');
+					setWebsocketRegionTestData(defaultWebsocketData);
 					break;
 			}
+			prevState.current = websocketsTestState;
 		};
-		// TODO: fix dependencies? Adding anything else but `networkTestState` here causes inifinite re-renders.
-		// Not sure how to fix 🤔
 		handleNewState();
-	}, [websocketsTestState]);
+	}, [setWebsocketResults, websocketsTestState]);
 
-	const setWebsocketResults = () => {
-		const results: WebsocketsTestReport = {};
-
-		const passed = Object.keys(websocketRegionTestData).filter(
-			(key) => websocketRegionTestData[key]?.result === 'passed',
-		);
-
-		const failed = Object.keys(websocketRegionTestData).filter(
-			(key) => websocketRegionTestData[key]?.result === 'failed',
-		);
-
-		let verdict = '';
-		const allWebsocketCount = Object.values(websocketRegionTestData).length;
-
-		if (failed.length === allWebsocketCount) {
-			verdict = 'failed';
-		} else if (failed.length > 0) {
-			verdict = 'warning';
-		} else {
-			verdict = 'passed';
-		}
-
-		results.errors = errors;
-		results.failed = failed;
-		results.id = uuidv4();
-		results.passed = passed;
-		results.result = verdict;
-		results.startedAt = new Date();
-
-		addTestData('websockets', results);
-	};
-
-	const startWebsocketsTest = async (timeout = 10) => {
-		setTestDuration(timeout);
+	const startWebsocketsTest = useCallback(() => {
 		setWebsocketsTestState('starting');
-	};
+	}, []);
 
-	const stopWebsocketsTest = () => {
+	const stopWebsocketsTest = useCallback(() => {
 		if (websocketsTestState === 'finished') {
 			return;
 		}
-		setWebsocketsTestState('aborted');
-	};
+		setWebsocketsTestState('stopping');
+	}, [websocketsTestState]);
 
 	return {
 		startWebsocketsTest,
