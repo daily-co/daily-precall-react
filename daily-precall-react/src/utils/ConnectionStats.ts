@@ -1,5 +1,9 @@
 import ConnectionTester from './ConnectionTester.ts';
-import { IceServerInterface, RTCStatsReportStat, Throughput } from '../types.ts';
+import {
+	IceServerInterface,
+	RTCStatsReportStat,
+	Throughput,
+} from '../types.ts';
 
 export default class ConnectionStats {
 	intervalId: string;
@@ -39,7 +43,6 @@ export default class ConnectionStats {
 	}
 
 	async startContinuouslySampling() {
-		console.log('startContinuouslySampling');
 		await this.setupPeerConnection();
 		this.roundTripTimes = [];
 	}

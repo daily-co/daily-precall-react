@@ -3,8 +3,8 @@ import { startWebsocketTests, TestRegions } from '../utils/WebSocketTester.ts';
 import { TestState, useDailyTest } from '../DailyTest.tsx';
 import { WebsocketsTestReport } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
-import { useCatchErrors } from '../utils/useCatchErrors.js';
-import { useTimeout } from '../utils/useTimeout.js';
+import { useCatchErrors } from '../utils/useCatchErrors.ts';
+import { useTimeout } from '../utils/useTimeout.tsx';
 
 type Regions = {
 	[key in TestRegions]?: {

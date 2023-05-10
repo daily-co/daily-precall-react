@@ -10,8 +10,8 @@ import {
 } from '../utils/constants.ts';
 import NetworkTester from '../utils/NetworkTester.ts';
 import { v4 as uuidv4 } from 'uuid';
-import { useCatchErrors } from '../utils/useCatchErrors.js';
-import { useTimeout } from '../utils/useTimeout.js';
+import { useCatchErrors } from '../utils/useCatchErrors.ts';
+import { useTimeout } from '../utils/useTimeout.tsx';
 
 type Protocols = {
 	[key in ConnectionModes]?: {
@@ -119,7 +119,6 @@ export const useNetworkTest = () => {
 				case 'idle':
 					break;
 				case 'starting':
-					console.log('starting');
 					const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
 					const iceServers = await svcResp.json();
 					const testers = await Promise.all(

@@ -1,4 +1,4 @@
-import { CONNECTION_MODES, CONNECTION_STATUS } from './constants.js';
+import { CONNECTION_MODES, CONNECTION_STATUS } from './constants.ts';
 import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
 
 export default class NetworkTester {
