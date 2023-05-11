@@ -5,7 +5,7 @@
 Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
 a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
 
-# Running locally 
+# Running locally (do this for now)
 This repo uses Yarn and Yarn workspaces.
 ```bash
 # clone repo
@@ -22,7 +22,7 @@ yarn watch-app
 ```
 Any changes made in the library will be automatically picked up in the app.
 
-# Installation
+# Installation (this won't work just yet, awaiting publication)
 ```bash
 # connection and device checks
 yarn install @daily-co/daily-react-precall @daily-co/daily-js @daily-co/daily-react recoil
@@ -86,8 +86,8 @@ function DailyTests() {
 Learn more about Daily Precall React by reading our docs at [TODO].
 
 
-# DailyTests
-We've set up automatic tests for the library using Jest and React Testing Library. You can run the tests using the following command:
+# Testing
+We've set up automatic tests for the library using Jest and React Testing Library. You can run the tests inside the `daily-precall-react` folder using the following command:
 
 ```bash
 yarn test
