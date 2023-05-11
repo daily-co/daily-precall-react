@@ -1,15 +1,15 @@
 /// <reference types="vite/client" />
+// needed to load the .wav file
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDevices } from '@daily-co/daily-react';
 import { AudioAnalyser } from '../shared/AudioVisualiser/AudioAnalyser.ts';
 import { AudioVisualiser } from '../shared/AudioVisualiser/AudioVisualiser.tsx';
-import { useTabs } from '../../hooks/useUiState';
 import { Card } from '../shared/Card/Card';
-import { Button } from '../shared/Button/Button';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
 
 import sound from '../shared/AudioVisualiser/sound.wav';
+import { Link } from 'react-router-dom';
 
 export const SpeakerCheck: React.FC = () => {
 	const { speakers, setSpeaker } = useDevices();
@@ -32,8 +32,6 @@ export const SpeakerCheck: React.FC = () => {
 			setShowTroubleshooting(true);
 		}
 	};
-
-	const { switchTabs } = useTabs();
 
 	useEffect(() => {
 		const audio = audioRef.current;
@@ -108,17 +106,19 @@ export const SpeakerCheck: React.FC = () => {
 		<Card title="Speakers">
 			<h2>Can you hear the sound?</h2>
 			<div>
-				<Button onClick={() => switchTabs('mic-check')}>Yes</Button>
-				<Button onClick={toggleTroubleShooting}>No</Button>
+				<Link to={`/mic-check`} className="link primary">
+					Yes
+				</Link>
+				<button onClick={toggleTroubleShooting} className="button primary">
+					No
+				</button>
 			</div>
 
-			<Button variant="ghost" onClick={() => switchTabs('mic-check')}>
-				I can’t hear the sound due to a hearing impairment
-			</Button>
+			<Link to={`/mic-check`} className="link ghost">
+				I can’t see the screen due to a visual impairment
+			</Link>
 
-			<TroubleShooting
-				show={showTroubleshooting}
-				skipStep={() => switchTabs('mic-check')}>
+			<TroubleShooting show={showTroubleshooting} skipStep={'/mic-check'}>
 				<p>
 					Is the volume turned up? Check to make sure that your volume is turned
 					up, and that the sound is not on mute.
@@ -138,9 +138,9 @@ export const SpeakerCheck: React.FC = () => {
 
 			<audio ref={audioRef} src={sound} />
 
-			<Button onClick={toggleSound} variant="ghost">
+			<button onClick={toggleSound} className="button secondary">
 				Toggle playing test sound
-			</Button>
+			</button>
 
 			{speakers.length > 0 && (
 				<form>

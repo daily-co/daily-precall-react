@@ -6,11 +6,10 @@ import {
 } from '@daily-co/daily-react';
 import { AudioAnalyser } from '../shared/AudioVisualiser/AudioAnalyser.ts';
 import { AudioVisualiser } from '../shared/AudioVisualiser/AudioVisualiser.tsx';
-import { useTabs } from '../../hooks/useUiState';
 
 import { Card } from '../shared/Card/Card';
-import { Button } from '../shared/Button/Button';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
+import { Link } from 'react-router-dom';
 
 export const MicCheck: React.FC = () => {
 	const localSessionId = useLocalSessionId();
@@ -27,8 +26,6 @@ export const MicCheck: React.FC = () => {
 			setShowTroubleshooting(true);
 		}
 	};
-
-	const { switchTabs } = useTabs();
 
 	const updateMicrophone = (ev: React.ChangeEvent<HTMLSelectElement>) => {
 		setMicrophone(ev.target.value).catch((err) => console.log(err));
@@ -67,7 +64,7 @@ export const MicCheck: React.FC = () => {
       How to handle them differs per browser: the recovery path for a blocked camera is slightly different
       on Firefox than it is in Chrome. Distinguishing between mobile and desktop devices is also key.*/}
 			{hasMicError && (
-				<TroubleShooting show skipStep={() => switchTabs('network-check')}>
+				<TroubleShooting show skipStep={'/network-check'}>
 					<h3>We have detected a microphone error.</h3>
 					{micState === 'blocked' && (
 						<>
@@ -131,12 +128,13 @@ export const MicCheck: React.FC = () => {
 				<>
 					<h2>Try making some noise!</h2>
 					<div>
-						<Button onClick={() => switchTabs('network-check')}>
+						<Link className="link primary" to={`/network-check`}>
 							Skip this step
-						</Button>
-						<Button onClick={toggleTroubleShooting} variant="ghost">
+						</Link>
+
+						<button onClick={toggleTroubleShooting} className="button ghost">
 							I need help
-						</Button>
+						</button>
 					</div>
 
 					<TroubleShooting show={showTroubleshooting}>
@@ -146,8 +144,8 @@ export const MicCheck: React.FC = () => {
 								dropdown below?
 							</li>
 							<li>
-								If you are using your laptop&apos;s microphone, make sure your
-								laptop is open
+								If you are using your laptop's microphone, make sure your laptop
+								is open
 							</li>
 							<li>Is something covering your microphone?</li>
 							<li>
@@ -168,7 +166,9 @@ export const MicCheck: React.FC = () => {
 				<>
 					<h2>Your microphone works!</h2>
 					<div>
-						<Button onClick={() => switchTabs('network-check')}>Next</Button>
+						<Link to={`/network-check`} className="link primary">
+							Next
+						</Link>
 					</div>
 				</>
 			)}

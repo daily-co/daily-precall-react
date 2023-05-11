@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import DailyIframe, { DailyCall } from '@daily-co/daily-js';
+import DailyIframe, { DailyCall, DailyBrowserInfo } from '@daily-co/daily-js';
 import { DailyProvider } from '@daily-co/daily-react';
-import { useTabs } from './hooks/useUiState';
-import { Button } from './components/shared/Button/Button.tsx';
+import { logger } from './utils/Logger.ts';
+
 import { Tests } from './components/Tests';
+import { UnsupportedBrowser } from './components/UnsupportedBrowser';
+import { Navigation } from './components/Navigation';
 import './App.css';
 
 export const App = () => {
 	const [dailyCallObject, setDailyCallObject] = useState<DailyCall | null>(
 		null,
 	);
+	const [browserInfo, setBrowserInfo] = useState<DailyBrowserInfo | null>(null);
 
 	/*
 	 * We need a Daily Call Object to interact with both the DailyProvider and the DailyTestProvider.
@@ -18,20 +21,30 @@ export const App = () => {
 	 * where we'll pass the object to the DailyTestProvider.
 	 */
 	useEffect(() => {
-		const co = DailyIframe.createCallObject();
-		setDailyCallObject(co);
+		// There's no reason to create a call object and
+		// start an entire precall check if the user's browser isn't supported.
+		const supportedBrowser = DailyIframe.supportedBrowser();
+		setBrowserInfo(supportedBrowser);
+
+		if (supportedBrowser.supported) {
+			logger.info('Browser is supported');
+			const co = DailyIframe.createCallObject();
+			setDailyCallObject(co);
+			logger.info('Created call object');
+		} else {
+			logger.warn('Browser is not supported');
+		}
 
 		return () => {
+			logger.info('Setting call object to null');
 			setDailyCallObject(null);
 		};
 	}, []);
 
-	const { switchTabs } = useTabs();
-
 	return (
 		<div className="app">
 			<header>
-				<h1>Test your network and devices</h1>
+				<img src="../public/logo.svg" alt="Daily logo" />
 				<p>
 					The Daily API makes implementing a precall test a breeze, especially
 					when combined with the{' '}
@@ -50,33 +63,13 @@ export const App = () => {
 						}}>
 						<Tests />
 					</DailyProvider>
+				) : browserInfo?.supported ? (
+					'No call object could be created...'
 				) : (
-					<p>No call object..</p>
+					<UnsupportedBrowser />
 				)}
 			</main>
-			<nav className="navigation">
-				<Button onClick={() => switchTabs('video-check')} variant="tab">
-					Video check
-				</Button>
-				<Button onClick={() => switchTabs('speaker-check')} variant="tab">
-					Speaker check
-				</Button>
-				<Button onClick={() => switchTabs('mic-check')} variant="tab">
-					Microphone check
-				</Button>
-				<Button onClick={() => switchTabs('network-check')} variant="tab">
-					Network check
-				</Button>
-				<Button onClick={() => switchTabs('connection-check')} variant="tab">
-					Connection check
-				</Button>
-				<Button onClick={() => switchTabs('websocket-check')} variant="tab">
-					WebSocket check
-				</Button>
-				<Button onClick={() => window.location.reload()} variant="tab">
-					Restart
-				</Button>
-			</nav>
+			<Navigation />
 		</div>
 	);
 };

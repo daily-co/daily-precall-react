@@ -4,7 +4,7 @@ export interface LogFn {
 }
 
 export interface LoggerInterface {
-	log: LogFn;
+	info: LogFn;
 	warn: LogFn;
 	error: LogFn;
 }
@@ -15,7 +15,7 @@ export type LogLevel = 'log' | 'warn' | 'error';
 const noop = () => {};
 
 class ConsoleLogger implements LoggerInterface {
-	readonly log: LogFn;
+	readonly info: LogFn;
 	readonly warn: LogFn;
 	readonly error: LogFn;
 
@@ -29,7 +29,7 @@ class ConsoleLogger implements LoggerInterface {
 
 		if (level === 'error') {
 			this.warn = noop;
-			this.log = noop;
+			this.info = noop;
 			return;
 		}
 
@@ -40,11 +40,11 @@ class ConsoleLogger implements LoggerInterface {
 		);
 
 		if (level === 'warn') {
-			this.log = noop;
+			this.info = noop;
 			return;
 		}
 
-		this.log = console.log.bind(
+		this.info = console.info.bind(
 			console,
 			'DAILY: %c%s',
 			'background-color: #E9F5EC; padding: 2px 5px;',

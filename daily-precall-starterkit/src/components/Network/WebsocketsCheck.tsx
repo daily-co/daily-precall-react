@@ -6,9 +6,7 @@ import {
 } from '@daily-co/daily-precall-react';
 
 import { Card } from '../shared/Card/Card';
-import { Button } from '../shared/Button/Button';
 
-const TEST_TIMEOUT = 10;
 export const WebsocketsCheck: React.FC = () => {
 	const { testData } = useDailyTest();
 
@@ -62,16 +60,18 @@ export const WebsocketsCheck: React.FC = () => {
 			</p>
 			<>
 				<div>
-					<Button
-						onClick={() => startWebsocketsTest(TEST_TIMEOUT)}
+					<button
+						className="button primary"
+						onClick={() => startWebsocketsTest()}
 						disabled={
 							websocketsTestState === 'running' ||
 							websocketsTestState === 'starting' ||
 							websocketsTestState === 'stopping'
 						}>
 						Start websockets check
-					</Button>
-					<Button
+					</button>
+					<button
+						className="button primary"
 						onClick={() => stopWebsocketsTest()}
 						disabled={
 							websocketsTestState === 'stopping' ||
@@ -79,7 +79,7 @@ export const WebsocketsCheck: React.FC = () => {
 							websocketsTestState === 'finished'
 						}>
 						Stop network check
-					</Button>
+					</button>
 				</div>
 
 				<div>

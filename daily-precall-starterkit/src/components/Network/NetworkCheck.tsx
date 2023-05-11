@@ -6,9 +6,7 @@ import {
 } from '@daily-co/daily-precall-react';
 
 import { Card } from '../shared/Card/Card';
-import { Button } from '../shared/Button/Button';
 
-const TEST_TIMEOUT = 5;
 export const NetworkCheck: React.FC = () => {
 	const { testData } = useDailyTest();
 
@@ -70,16 +68,18 @@ export const NetworkCheck: React.FC = () => {
 			</p>
 			<>
 				<div>
-					<Button
-						onClick={() => startNetworkTest(TEST_TIMEOUT)}
+					<button
+						className="button primary"
+						onClick={() => startNetworkTest()}
 						disabled={
 							networkTestState === 'running' ||
 							networkTestState === 'starting' ||
 							networkTestState === 'stopping'
 						}>
 						Start network check
-					</Button>
-					<Button
+					</button>
+					<button
+						className="button primary"
 						onClick={() => stopNetworkTest()}
 						disabled={
 							networkTestState === 'stopping' ||
@@ -87,7 +87,7 @@ export const NetworkCheck: React.FC = () => {
 							networkTestState === 'finished'
 						}>
 						Stop network check
-					</Button>
+					</button>
 				</div>
 
 				<div>

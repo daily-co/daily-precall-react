@@ -9,13 +9,13 @@
 	--grey: 245, 245, 245;
 	--dark-grey: 18, 26, 36;
 	--mid-grey: 206, 206, 206;
-	--h1-base: 1.3rem;
-	--h2-base: 1.15rem;
+	--h1-base: 1.15rem;
+	--h2-base: 1.10rem;
 	--h3-base: 1.05rem;
 }
 
 body {
-	background: rgba(var(--grey));
+	background: rgba(var(--dark-accent));
 	line-height: 1.5;
 	font-size: 1rem;
 	display: flex;
@@ -93,19 +93,12 @@ form label {
 	font-size: .8rem;
 }
 
-.app {
-	background: white;
-	display: grid;
-	place-content: center;
-	padding: clamp(1rem, 5vw, 3rem);
-	border-radius: 4px;
-}
-
 nav {
 	display: flex;
-	gap: 6px;
 	flex-flow: wrap;
-	justify-content: space-around;
+	justify-content: space-between;
+	align-items: initial;
+	gap: 4px;
 }
 
 hr {
@@ -132,4 +125,91 @@ pre {
 	word-wrap: break-word;
 	font-size: .8rem;
 	padding: 1rem;
+}
+
+
+/* Links and button */
+div:has(a):has(button) {
+	gap: 6px;
+	display: flex;
+	margin-bottom: 1rem;
+}
+
+nav a.nav,
+nav a.active,
+.button,
+.link {
+	color: rgba(var(--dark-grey));
+	border: 0;
+	cursor: pointer;
+	display: inline-block;
+	min-width: 64px;
+	padding: .5rem;
+	font-size: .8rem;
+	background-color: transparent;
+	text-align: center;
+	border-radius: 4px;
+	text-decoration: none;
+}
+
+nav a.nav {
+	text-decoration: none;
+	color: rgba(var(--dark-grey), 0.5);
+}
+
+nav a.active {
+	border-bottom: 2px solid rgba(var(--mid-grey));
+	border-radius: 0;
+}
+
+.button.primary,
+.link.primary {
+	background-color: rgba(var(--dark-grey));
+	color: rgba(var(--accent));
+}
+
+.button.ghost,
+.link.ghost {
+	background: transparent;
+	border-radius: 0;
+	padding: .1rem;
+	border-top: 0;
+	border-right: 0;
+	border-bottom: 2px solid rgba(var(--accent));
+	border-left: 0;
+}
+
+.button.ghost:hover,
+.link.ghost:hover {
+	border-bottom: 2px solid rgba(var(--accent));
+	background-color: rgba(var(--mid-grey), 0.2);
+}
+
+button.secondary,
+a.secondary {
+	color: rgba(var(--dark-grey));
+	background-color: rgba(var(--accent));
+}
+
+button:disabled,
+button[disabled] {
+	background: rgba(var(--mid-grey));
+	color: rgba(var(--dark-grey), 0.6);
+	cursor: not-allowed;
+}
+
+.app {
+	background: white;
+	display: grid;
+	place-content: center;
+	padding: clamp(2rem, 5vw, 3rem);
+	border-radius: 4px;
+}
+
+
+.button:disabled,
+.button[disabled] {
+	background: rgba(var(--mid-grey));
+	color: rgba(var(--dark-grey), 0.6);
+	cursor: not-allowed;
 }

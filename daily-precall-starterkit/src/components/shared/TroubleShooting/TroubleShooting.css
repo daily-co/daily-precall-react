@@ -19,35 +19,3 @@
 	margin-top: 1rem;
 	align-items: center;
 }
-
-.troubleshooting-transition-appear {
-	opacity: 0;
-	transform: scale(0.6);
-}
-
-.troubleshooting-transition-appear-done {
-	opacity: 1;
-	transition: all 400ms;
-	transform: scale(1);
-}
-
-.troubleshooting-transition-enter {
-	opacity: 0;
-	transform: scale(0.3);
-}
-
-.troubleshooting-transition-enter-active {
-	opacity: 1;
-	transition: all 400ms ease-out;
-	transform: scale(1);
-}
-
-.troubleshooting-transition-exit {
-	opacity: 1;
-}
-
-.troubleshooting-transition-exit-active {
-	opacity: 0;
-	transition: all 400ms ease-in;
-	transform:  scale(0.3);
-}

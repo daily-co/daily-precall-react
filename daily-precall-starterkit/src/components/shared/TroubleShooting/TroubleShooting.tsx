@@ -1,48 +1,34 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import './TroubleShooting.css';
 
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { Button } from '../Button/Button';
+import { Link } from 'react-router-dom';
 
 interface Props {
 	show: boolean;
-	skipStep?: () => void;
+	skipStep?: string;
 }
 export const TroubleShooting: React.FC<React.PropsWithChildren<Props>> = ({
 	children,
 	show,
 	skipStep,
 }) => {
-	const nodeRef = useRef(null);
-
-	return (
-		<TransitionGroup>
-			{show && (
-				<CSSTransition
-					classNames="troubleshooting-transition"
-					appear={show}
-					timeout={{
-						exit: 0,
-						enter: 1000,
-					}}
-					nodeRef={nodeRef}>
-					<section ref={nodeRef} className="troubleshooting">
-						<article>
-							{children}
-							<nav>
-								<Button onClick={() => window.location.reload()}>
-									Reload page
-								</Button>
-								{skipStep && (
-									<Button variant="ghost" onClick={skipStep}>
-										Skip step
-									</Button>
-								)}
-							</nav>
-						</article>
-					</section>
-				</CSSTransition>
-			)}
-		</TransitionGroup>
-	);
+	return show ? (
+		<section className="troubleshooting">
+			<article>
+				{children}
+				<nav>
+					<button
+						className="button primary"
+						onClick={() => window.location.reload()}>
+						Reload page
+					</button>
+					{skipStep && (
+						<Link className="link ghost" to={skipStep}>
+							Skip step
+						</Link>
+					)}
+				</nav>
+			</article>
+		</section>
+	) : null;
 };

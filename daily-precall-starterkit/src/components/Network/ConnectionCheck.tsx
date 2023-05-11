@@ -5,7 +5,6 @@ import {
 	ConnectionTestReport,
 } from '@daily-co/daily-precall-react';
 import { Card } from '../shared/Card/Card';
-import { Button } from '../shared/Button/Button';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
 import { useLocalSessionId, useMediaTrack } from '@daily-co/daily-react';
 
@@ -20,6 +19,8 @@ export const ConnectionCheck: React.FC = () => {
 		connectionTestState,
 	} = useConnectionTest();
 
+	/* We're using the user's video and audio track for the througput test. You could
+	 * pass other tracks here too.*/
 	const localSessionId = useLocalSessionId() ?? '';
 	const audioTrack = useMediaTrack(localSessionId, 'audio');
 	const videoTrack = useMediaTrack(localSessionId, 'video');
@@ -49,8 +50,7 @@ export const ConnectionCheck: React.FC = () => {
 						Wi-Fi, move closer to the router
 					</li>
 					<li>
-						Switch Wi-Fi networks or use your smartphone&apos;s hotspot (such as
-						5G)
+						Switch Wi-Fi networks or use your smartphone's hotspot (such as 5G)
 					</li>
 					<li>
 						<b>Did you know?</b> You can turn off your camera during your video
@@ -141,7 +141,8 @@ export const ConnectionCheck: React.FC = () => {
 			{hasStreams && (
 				<>
 					<div>
-						<Button
+						<button
+							className="button primary"
 							onClick={() =>
 								startConnectionTest(
 									mediaStream.current as MediaStream,
@@ -154,8 +155,9 @@ export const ConnectionCheck: React.FC = () => {
 								connectionTestState === 'stopping'
 							}>
 							Start connection check ({TEST_DURATION} seconds)
-						</Button>
-						<Button
+						</button>
+						<button
+							className="button primary"
 							onClick={() => stopConnectionTest()}
 							disabled={
 								connectionTestState === 'stopping' ||
@@ -163,7 +165,7 @@ export const ConnectionCheck: React.FC = () => {
 								connectionTestState === 'finished'
 							}>
 							Stop connection check
-						</Button>
+						</button>
 					</div>
 
 					<div>

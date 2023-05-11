@@ -27,9 +27,9 @@
 	color: rgba(var(--dark-grey));
 }
 
-.button-primary:hover(:not[disabled]) {
-	background-color: rgba(var(--accent), 0.8);
-	box-shadow: 0 0 0 2px rgba(var(--mid-grey), 0.2);
+.button-primary:hover:not([disabled]) {
+	background-color: rgba(var(--dark-grey));
+	color: rgba(var(--accent));
 }
 
 .button-ghost {
