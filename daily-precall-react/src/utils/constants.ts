@@ -10,12 +10,8 @@ export const CONNECTION_MODES = {
 const ConnectionModes = Object.values(CONNECTION_MODES);
 export type ConnectionModes = (typeof ConnectionModes)[number];
 
-export const NAT_SERVICES = {
-	TWILIO: 'twilio',
-};
-
 export const NAT_SERVICES_LINKS = {
-	TWILIO: 'https://prod-ks.pluot.blue/tt-150331.json', // TODO: is this ok to expose?
+	TWILIO: 'https://prod-ks.pluot.blue/tt-150331.json',
 };
 
 export const CONNECTION_STATUS = {

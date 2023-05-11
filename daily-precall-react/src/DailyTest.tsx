@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext } from 'react';
 import { atom, useRecoilCallback, useRecoilValue } from 'recoil';
 import { DailyCall } from '@daily-co/daily-js';
 
@@ -40,12 +40,9 @@ export interface ContextValue {
 	): void;
 }
 
-const DailyTestContext = createContext<ContextValue>({
-	testData: {},
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	addTestData: () => {},
-	callObject: null,
-});
+export const DailyTestContext = createContext<ContextValue>(
+	null as unknown as ContextValue,
+);
 
 const testDataState = atom<DailyTestData>({
 	key: 'test-data-state',
@@ -78,5 +75,4 @@ export const DailyTest: React.FC<React.PropsWithChildren<Props>> = ({
 		</DailyTestContext.Provider>
 	);
 };
-export const useDailyTest = () => useContext(DailyTestContext);
 DailyTestContext.displayName = 'DailyTestContext';

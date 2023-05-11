@@ -26,8 +26,8 @@ export type RTCStatsReportStat =
 export type ResultTypes = 'bad' | 'good' | 'warning' | 'failed' | '';
 
 export interface Throughput {
-	maxRTT: number;
-	packetLoss?: number;
+	maxRTT: number | null;
+	packetLoss?: number | null;
 }
 
 export interface ConnectionTestReport {
@@ -35,7 +35,7 @@ export interface ConnectionTestReport {
 	id?: string;
 	result?: ResultTypes;
 	startedAt?: Date;
-	throughput?: Throughput;
+	throughput?: Throughput | null;
 }
 
 export interface NetworkTestReport {

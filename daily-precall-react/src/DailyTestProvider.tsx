@@ -29,7 +29,7 @@ export const DailyTestProvider: React.FC<React.PropsWithChildren<Props>> = ({
 		handleNewMeetingState();
 		callObject?.on('left-meeting' as DailyEvent, handleNewMeetingState);
 
-		callObject.startCamera().then(() => console.log('===camera started==='));
+		callObject.startCamera();
 
 		// Stop listening for changes in state
 		return () => {

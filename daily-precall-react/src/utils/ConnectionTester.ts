@@ -2,8 +2,8 @@ import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
 
 export default class ConnectionTester {
 	iceServers: RTCIceServer[] | IceServerInterface[];
-	localPeer: null | RTCPeerConnectionWithBuffers;
-	remotePeer: null | RTCPeerConnectionWithBuffers;
+	localPeer: RTCPeerConnectionWithBuffers | null;
+	remotePeer: RTCPeerConnectionWithBuffers | null;
 	mediaStream: MediaStream;
 	offerOptions: {
 		offerToReceiveAudio: boolean;

@@ -11,25 +11,21 @@ export default class ConnectionStats {
 	roundTripTimes: number[];
 	iceServers: IceServerInterface[];
 	mediaStream: MediaStream;
-	limitSamples: boolean;
 	networkTester: ConnectionTester | undefined;
 	peerConnection: RTCPeerConnection | undefined | null;
 
 	constructor({
 		iceServers,
 		mediaStream,
-		limitSamples = true,
 	}: {
 		iceServers: IceServerInterface[];
 		mediaStream: MediaStream;
-		limitSamples: boolean;
 	}) {
 		this.intervalId = '';
 		this.timeoutId = '';
 		this.roundTripTimes = [];
 		this.iceServers = iceServers;
 		this.mediaStream = mediaStream;
-		this.limitSamples = limitSamples;
 	}
 
 	async setupPeerConnection() {
@@ -62,14 +58,6 @@ export default class ConnectionStats {
 
 	async getRoundTripTimePeriodically() {
 		const rtt = await this.sampleRoundTripTime();
-
-		// We need to shift in the network debugger, but not in the media device selector page/network tester.
-		// In the debugger it's not helpful to keep older results around (especially if you're moving around or
-		// trying different things), but in the network tester you probably won't be doing this.
-		if (this.roundTripTimes.length > 9 && this.limitSamples) {
-			this.roundTripTimes.shift();
-		}
-
 		rtt && this.roundTripTimes.push(rtt);
 	}
 
@@ -174,12 +162,17 @@ export const getResultFromNetworkTest = (networkStats: Throughput) => {
 		packetLoss: '',
 	};
 
+	console.log(networkStats);
+
 	if (!networkStats) {
 		// connection failed so no stats available
 		return 'failed';
 	}
 
-	if (typeof networkStats.maxRTT !== 'undefined') {
+	if (
+		networkStats.maxRTT !== null &&
+		typeof networkStats.maxRTT !== 'undefined'
+	) {
 		if (networkStats.maxRTT >= RTT_LIMIT) {
 			result.rtt = 'bad';
 		} else if (networkStats.maxRTT >= RTT_WARNING) {
@@ -189,7 +182,10 @@ export const getResultFromNetworkTest = (networkStats: Throughput) => {
 		}
 	}
 
-	if (typeof networkStats.packetLoss !== 'undefined') {
+	if (
+		networkStats.packetLoss !== null &&
+		typeof networkStats.packetLoss !== 'undefined'
+	) {
 		if (networkStats.packetLoss >= PACKETLOSS_LIMIT) {
 			result.packetLoss = 'bad';
 		} else if (networkStats.packetLoss >= PACKETLOSS_WARNING) {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { startWebsocketTests, TestRegions } from '../utils/WebSocketTester.ts';
-import { TestState, useDailyTest } from '../DailyTest.tsx';
+import { TestState } from '../DailyTest.tsx';
+import { useDailyTest } from '../useDailyTest.ts';
 import { WebsocketsTestReport } from '../types.ts';
 import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.ts';

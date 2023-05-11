@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { TestState, useDailyTest } from '../DailyTest.tsx';
+import { TestState } from '../DailyTest.tsx';
+import { useDailyTest } from '../useDailyTest.ts';
 import { IceServerInterface, NetworkTestReport } from '../types.ts';
 import {
 	CONNECTION_MODES,

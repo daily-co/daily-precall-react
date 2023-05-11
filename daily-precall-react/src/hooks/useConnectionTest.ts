@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConnectionTestReport } from '../types.ts';
-import { TestState, useDailyTest } from '../DailyTest.tsx';
+import { TestState } from '../DailyTest.tsx';
+import { useDailyTest } from '../useDailyTest.ts';
 import ConnectionStats, {
 	getResultFromNetworkTest,
 } from '../utils/ConnectionStats.ts';
@@ -9,8 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.ts';
 
 const initialThroughputTestData: ConnectionTestReport['throughput'] = {
-	maxRTT: 0,
-	packetLoss: 0,
+	maxRTT: null,
+	packetLoss: null,
 };
 const initialThroughputTestResult: ConnectionTestReport['result'] = undefined;
 
@@ -89,7 +90,6 @@ export const useConnectionTest = () => {
 					connectionStatsTester.current = new ConnectionStats({
 						iceServers: iceServers,
 						mediaStream: mediaStreamRef.current,
-						limitSamples: false,
 					});
 
 					await connectionStatsTester.current.startContinuouslySampling();
