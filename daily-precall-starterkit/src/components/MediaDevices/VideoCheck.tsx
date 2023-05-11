@@ -4,11 +4,11 @@ import {
 	useDevices,
 	useLocalParticipant,
 } from '@daily-co/daily-react';
+import { Link } from 'react-router-dom';
 
 import { Card } from '../shared/Card/Card.tsx';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting.tsx';
 import { Loader } from '../shared/Loader/Loader.tsx';
-import { Link } from 'react-router-dom';
 
 export const VideoCheck: React.FC = () => {
 	const localParticipantId = useLocalParticipant();

@@ -3,13 +3,14 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDevices } from '@daily-co/daily-react';
+import { Link } from 'react-router-dom';
+
 import { AudioAnalyser } from '../shared/AudioVisualiser/AudioAnalyser.ts';
 import { AudioVisualiser } from '../shared/AudioVisualiser/AudioVisualiser.tsx';
 import { Card } from '../shared/Card/Card';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
 
 import sound from '../shared/AudioVisualiser/sound.wav';
-import { Link } from 'react-router-dom';
 
 export const SpeakerCheck: React.FC = () => {
 	const { speakers, setSpeaker } = useDevices();

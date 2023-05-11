@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { startWebsocketTests, TestRegions } from '../utils/WebSocketTester.ts';
+import { startWebsocketTests, TestRegion } from '../utils/WebSocketTester.ts';
 import { TestState } from '../DailyTest.tsx';
 import { useDailyTest } from '../useDailyTest.ts';
 import { WebsocketsTestReport } from '../types.ts';
@@ -8,13 +8,13 @@ import { useCatchErrors } from '../utils/useCatchErrors.ts';
 import { useTimeout } from '../utils/useTimeout.tsx';
 
 type Regions = {
-	[key in TestRegions]?: {
+	[key in TestRegion]?: {
 		result?: string | null;
 	};
 };
 
-/* Test will automatically time out after 30 seconds*/
-const TIME_OUT_IN_SECONDS = 30;
+/* Test will automatically time out after 10 seconds*/
+const TIME_OUT_IN_SECONDS = 10;
 
 const defaultWebsocketData = {
 	'eu-central-1': {

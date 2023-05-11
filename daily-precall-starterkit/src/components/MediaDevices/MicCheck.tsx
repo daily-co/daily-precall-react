@@ -4,12 +4,13 @@ import {
 	useLocalSessionId,
 	useAudioTrack,
 } from '@daily-co/daily-react';
+import { Link } from 'react-router-dom';
+
 import { AudioAnalyser } from '../shared/AudioVisualiser/AudioAnalyser.ts';
 import { AudioVisualiser } from '../shared/AudioVisualiser/AudioVisualiser.tsx';
 
 import { Card } from '../shared/Card/Card';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
-import { Link } from 'react-router-dom';
 
 export const MicCheck: React.FC = () => {
 	const localSessionId = useLocalSessionId();
@@ -122,7 +123,7 @@ export const MicCheck: React.FC = () => {
 			)}
 
 			{/* There is no mic error that Daily can detect, but it's still possible the user's mic is not functioning correctly.
-      For example, they're using their MacBook in clamshell mode. This will not throw an error, but sound will not get
+      For example, they're using their MacBook in clam-shell mode. This will not throw an error, but sound will not get
       picked up either.*/}
 			{!hasMicError && !soundWorks && (
 				<>

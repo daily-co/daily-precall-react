@@ -57,6 +57,6 @@ export interface WebsocketsTestReport {
 }
 
 export declare type ErrorEvent = {
-	error: DailyNonFatalErrorType | DailyFatalErrorType;
+	error: DailyNonFatalErrorType | DailyFatalErrorType | string;
 	timestamp: Date;
 };

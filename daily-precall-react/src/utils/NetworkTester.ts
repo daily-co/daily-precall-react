@@ -2,12 +2,15 @@ import { CONNECTION_MODES, CONNECTION_STATUS } from './constants.ts';
 import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
 
 export default class NetworkTester {
+	/**
+	 * Contains the STUN or TURN servers for the connection.
+	 */
 	iceServers: RTCIceServer[] | IceServerInterface[];
 	connectionMode: string;
 	natService: string;
 
-	localPeer: null | RTCPeerConnectionWithBuffers;
-	remotePeer: null | RTCPeerConnectionWithBuffers;
+	localPeer: RTCPeerConnectionWithBuffers | null;
+	remotePeer: RTCPeerConnectionWithBuffers | null;
 
 	constraints: {
 		video: {
@@ -26,8 +29,8 @@ export default class NetworkTester {
 
 	connectionTimeout: ReturnType<typeof setTimeout>;
 	flushTimeout: ReturnType<typeof setTimeout>;
-	_connectionState: RTCPeerConnectionState | undefined;
-	_event: Event;
+	connectionState: RTCPeerConnectionState | undefined;
+	event: Event;
 
 	resolve: (value: {
 		iceCandidates?: IceServerInterface[];
@@ -35,6 +38,13 @@ export default class NetworkTester {
 	}) => void;
 	reject: () => void;
 
+	/**
+	 * Constructor for the NetworkTester class.
+	 * @constructor
+	 * @param {string} natService - The NAT service to use for the connection.
+	 * @param {string} connectionMode - The connection mode to use for the connection.
+	 * @param {IceServerInterface[]} iceServers - The array of STUN or TURN servers to use for the connection.
+	 */
 	constructor({
 		natService,
 		connectionMode = CONNECTION_MODES.ALL,
@@ -91,6 +101,10 @@ export default class NetworkTester {
 		};
 	}
 
+	/**
+	 * Sets up an RTCPeerConnection with the given ICE servers and ice transport policy.
+	 * @returns {Promise<unknown>} A promise that resolves when the RTCPeerConnection is established.
+	 */
 	async setupRTCPeerConnection(): Promise<unknown> {
 		const iceTransportPolicy = this.connectionMode.startsWith('turn')
 			? 'relay'
@@ -115,24 +129,33 @@ export default class NetworkTester {
 
 		this.setupPeerListeners();
 		await this.start();
+
 		return new Promise((resolve, reject) => {
+			// Set up a timeout to resolve the promise after 15 seconds.
 			this.resolve = resolve;
 			this.reject = reject;
 			this.connectionTimeout = global.setTimeout(() => {
 				const connectionInfo = this.getConnectionInfo();
 				this.resolve(connectionInfo);
-			}, 15000);
+			}, 15000); //@TODO variable?
+
+			// Set up a timeout to flush the ice candidates after 7.5 seconds of gathering.
 			this.flushTimeout = global.setTimeout(() => {
-				// always flush candidates after 7 seconds of gathering
 				this.flushIceCandidates(this.localPeer);
 				this.flushIceCandidates(this.remotePeer);
 			}, 7500);
 		});
 	}
 
+	/**
+	 * Sets up the listeners for the local and remote peers, including
+	 * handling of ICE candidates and connection state changes.
+	 */
 	setupPeerListeners() {
 		if (!this.localPeer) return;
-		this.localPeer.onicecandidate = (event) => {
+
+		// Handle local peer ICE candidates.
+		this.localPeer.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
 			if (
 				this.connectionMode === CONNECTION_MODES.STUN &&
 				event.candidate?.type === 'host'
@@ -142,14 +165,20 @@ export default class NetworkTester {
 			}
 
 			if (!event.candidate || !event.candidate.candidate) {
+				// Flush ICE candidates if no candidate is available.
 				this.flushIceCandidates(this.remotePeer);
 				return;
 			}
+
+			// Add the candidate to the local peer's ICE candidates and the
+			// remote peer's buffered ICE candidates.
 			this.localPeer?.iceCandidates?.push(event.candidate);
 			this.remotePeer?.bufferedIceCandidates?.push(event.candidate);
 		};
 
 		if (!this.remotePeer) return;
+
+		// Handle remote peer ICE candidates.
 		this.remotePeer.onicecandidate = (event) => {
 			if (!event.candidate || !event.candidate.candidate) {
 				this.flushIceCandidates(this.localPeer);
@@ -158,6 +187,7 @@ export default class NetworkTester {
 			this.localPeer?.bufferedIceCandidates?.push(event.candidate);
 		};
 
+		// Handle connection state changes for the local peer.
 		if (this.localPeer.connectionState) {
 			this.localPeer.onconnectionstatechange = () =>
 				this.onConnectionStateChange(this.localPeer?.connectionState);
@@ -196,35 +226,55 @@ export default class NetworkTester {
 		await remote?.setRemoteDescription(desc);
 	}
 
-	async createAnswer() {
-		return this.remotePeer
-			?.createAnswer(this.offerOptions)
-			.then(async (desc) => {
-				const description = desc as RTCSessionDescription;
-				return this.setDescription(
-					description,
-					this.remotePeer,
-					this.localPeer,
-				);
-			});
+	/**
+	 * Creates an answer to the remote peer's offer and sets it as the local peer's description.
+	 * @returns {Promise<void>} A promise that resolves once the local peer's description is set.
+	 */
+	async createAnswer(): Promise<void> {
+		try {
+			const description = await this.remotePeer?.createAnswer(
+				this.offerOptions,
+			);
+			await this.setDescription(
+				description as RTCSessionDescription,
+				this.remotePeer,
+				this.localPeer,
+			);
+		} catch (error) {
+			console.error('Failed to create answer:', error);
+		}
 	}
 
+	/**
+	 * Returns information about the current WebRTC connection.
+	 * @returns {Object} An object with `candidates` and `status` properties.
+	 */
 	getConnectionInfo() {
+		// Get local ice candidates, connection state, and ice connection state.
 		const candidates = this.localPeer?.iceCandidates;
 		const state = this.localPeer?.connectionState;
 		const iceState = this.localPeer?.iceConnectionState;
 
+		// Determine the connection status based on the connection and ice connection states.
+		const status =
+			state || iceState === 'connected'
+				? CONNECTION_STATUS.CONNECTED
+				: CONNECTION_STATUS.FAILED;
+
+		// Return an object with the candidates and status.
 		return {
 			candidates,
-			status:
-				state || iceState === 'connected'
-					? CONNECTION_STATUS.CONNECTED
-					: CONNECTION_STATUS.FAILED,
+			status,
 		};
 	}
 
+	/**
+	 * Handler for RTCPeerConnection's connection state change event.
+	 * @param {RTCPeerConnectionState|undefined} connectionState - The new connection state.
+	 * @return {void}
+	 */
 	onConnectionStateChange(connectionState: RTCPeerConnectionState | undefined) {
-		this._connectionState = connectionState;
+		this.connectionState = connectionState;
 		if (
 			this.localPeer?.connectionState === 'failed' ||
 			this.localPeer?.connectionState === 'connected'
@@ -235,9 +285,12 @@ export default class NetworkTester {
 		}
 	}
 
-	// We need this for Firefox, since it doesn't support connectionState, only iceConnectionState.
+	/**
+	 * Callback for when the iceConnectionState changes. Used for Firefox, since it doesn't support connectionState, only iceConnectionState.
+	 * @param {Event} event - The event object containing the state change information.
+	 */
 	onIceConnectionStateChange(event: Event) {
-		this._event = event;
+		this.event = event;
 		const iceState = this.localPeer?.iceConnectionState;
 		if (iceState === 'failed') {
 			const connectionInfo = this.getConnectionInfo();
@@ -252,14 +305,17 @@ export default class NetworkTester {
 		}
 	}
 
-	stop() {
+	/**
+	 * Stops the RTCPeerConnections and clears connectionTimeout and flushTimeout timeouts.
+	 */
+	stop(): void {
 		try {
 			this.localPeer?.close();
 			this.remotePeer?.close();
 			global.clearTimeout(this.connectionTimeout);
 			global.clearTimeout(this.flushTimeout);
 		} catch {
-			// ignore errors from close
+			// Failed to close RTCPeerConnections
 		}
 	}
 }

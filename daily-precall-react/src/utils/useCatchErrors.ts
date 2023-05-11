@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ErrorEvent } from '../types.ts';
 import { useDailyTest } from '../useDailyTest.ts';
+import { DailyEventObject } from '@daily-co/daily-js';
 
 export const useCatchErrors = () => {
 	const { callObject } = useDailyTest();
 	const [errors, setErrors] = useState<ErrorEvent[]>([]);
 
-	const addError = useCallback((error: any) => {
+	const addError = useCallback((error: DailyEventObject | string) => {
 		const newError: ErrorEvent = {
 			timestamp: new Date(),
 			error,

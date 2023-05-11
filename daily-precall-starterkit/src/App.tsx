@@ -3,7 +3,7 @@ import DailyIframe, { DailyCall, DailyBrowserInfo } from '@daily-co/daily-js';
 import { DailyProvider } from '@daily-co/daily-react';
 import { logger } from './utils/Logger.ts';
 
-import { Tests } from './components/Tests';
+import { DailyTests } from './components/DailyTests';
 import { UnsupportedBrowser } from './components/UnsupportedBrowser';
 import { Navigation } from './components/Navigation';
 import './App.css';
@@ -17,7 +17,7 @@ export const App = () => {
 	/*
 	 * We need a Daily Call Object to interact with both the DailyProvider and the DailyTestProvider.
 	 * Out of an abundance of caution, to make sure we're using the same call object for both providers,
-	 * we'll initialise it here and call `useDaily()` inside the <Tests/>, component,
+	 * we'll initialise it here and call `useDaily()` inside the <DailyTests/>, component,
 	 * where we'll pass the object to the DailyTestProvider.
 	 */
 	useEffect(() => {
@@ -44,7 +44,7 @@ export const App = () => {
 	return (
 		<div className="app">
 			<header>
-				<img src="../public/logo.svg" alt="Daily logo" />
+				<img src="../logo.svg" alt="Daily logo" />
 				<p>
 					The Daily API makes implementing a precall test a breeze, especially
 					when combined with the{' '}
@@ -61,7 +61,7 @@ export const App = () => {
 						recoilRootProps={{
 							override: false,
 						}}>
-						<Tests />
+						<DailyTests />
 					</DailyProvider>
 				) : browserInfo?.supported ? (
 					'No call object could be created...'

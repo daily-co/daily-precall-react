@@ -28,6 +28,10 @@ export default class ConnectionStats {
 		this.mediaStream = mediaStream;
 	}
 
+	/**
+	 * Sets up the RTCPeerConnection for the network test
+	 * @returns {Promise<void>} Resolves when the RTCPeerConnection is successfully set up
+	 */
 	async setupPeerConnection() {
 		this.networkTester = new ConnectionTester({
 			iceServers: this.iceServers,
@@ -38,11 +42,19 @@ export default class ConnectionStats {
 		this.peerConnection = this.networkTester.localPeer;
 	}
 
+	/**
+	 * Set up the peer connection and initialize roundTripTimes array.
+	 * @returns {Promise<void>} A Promise that resolves when the connection is set up and the array is initialized.
+	 */
 	async startContinuouslySampling() {
 		await this.setupPeerConnection();
 		this.roundTripTimes = [];
 	}
 
+	/**
+	 * Periodically retrieves the current round trip time and returns an object containing the maximum round trip time and packet loss.
+	 * @returns {{ maxRTT: number, packetLoss: number }}
+	 */
 	async getSample() {
 		if (!this.peerConnection) {
 			throw new Error('You need at peerConnection to continue');
@@ -56,22 +68,31 @@ export default class ConnectionStats {
 		};
 	}
 
+	/**
+	 * Samples the current round trip time and adds it to the `roundTripTimes` array.
+	 */
 	async getRoundTripTimePeriodically() {
 		const rtt = await this.sampleRoundTripTime();
 		rtt && this.roundTripTimes.push(rtt);
 	}
 
+	/**
+	 * Samples the current round trip time by retrieving stats from the peer connection.
+	 * @returns {Promise<number>} A Promise that resolves with the current round trip time in seconds.
+	 */
 	sampleRoundTripTime() {
 		return this.peerConnection?.getStats().then((statsMap: RTCStatsReport) => {
 			const statsObject = this.mapToObj(statsMap);
 			const stats: RTCStatsReportStat = Object.values(statsObject);
 
+			// Filter out stats that don't have currentRoundTripTime property
 			const currentRoundTripTimeStats = stats.filter((stat) => {
 				return stat.currentRoundTripTime;
 			});
 
 			// Firefox is not yet spec compliant so will need this until they are
 			if (currentRoundTripTimeStats.length === 0) {
+				// Find the first stat with a roundTripTime property
 				const roundTripTimeStats = stats.find((stat) => {
 					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 					// @ts-ignore - it exists!
@@ -86,6 +107,7 @@ export default class ConnectionStats {
 				// @ts-ignore - it exists!
 				return roundTripTimeStats.roundTripTime / 1000;
 			} else {
+				// Get the current round trip time of the nominated candidate if available
 				const nominatedCurrentRoundTripTimeStats =
 					currentRoundTripTimeStats.find((stat) => stat.nominated);
 
@@ -96,15 +118,20 @@ export default class ConnectionStats {
 		});
 	}
 
+	/**
+	 * Retrieves the packet loss percentage from the PeerConnection
+	 * @returns {Promise<number>} A Promise that resolves with the packet loss percentage as a number between 0 and 100
+	 */
 	async getPacketLoss() {
 		return this.peerConnection?.getStats().then((statsMap: RTCStatsReport) => {
 			const statsObject = this.mapToObj(statsMap);
+			// Filter the stats to only include inbound RTP streams
 			const stats: RTCInboundRtpStreamStats[] = Object.values(statsObject);
-
+			// Find the video inbound RTP stream stats
 			const videoPacketLossStats = stats.find((stat) => {
 				return stat.kind === 'video';
 			});
-
+			// Calculate the number of packets that were lost and received
 			const lost =
 				videoPacketLossStats && videoPacketLossStats.packetsLost
 					? videoPacketLossStats.packetsLost
@@ -116,13 +143,19 @@ export default class ConnectionStats {
 			const lostAndReceived = lost + received;
 
 			if (received > 0) {
+				// Calculate the packet loss percentage
 				return (lost / lostAndReceived) * 100;
 			} else {
+				// If no packets were received, the packet loss percentage is 0
 				return 0;
 			}
 		});
 	}
 
+	/**
+	 * Returns the maximum round trip time from the roundTripTimes array.
+	 * @returns {number} - The maximum round trip time.
+	 */
 	getMaxRtt() {
 		return Math.max(...this.roundTripTimes);
 	}
@@ -131,12 +164,20 @@ export default class ConnectionStats {
 		this.networkTester?.stop();
 	}
 
+	/**
+	 * Stops the network quality sampling process by clearing the interval and timeout, and closing the connection.
+	 */
 	stopSampling() {
 		clearInterval(this.intervalId);
 		clearTimeout(this.timeoutId);
 		this.closeConnection();
 	}
 
+	/**
+	 * Convert RTCStatsReport to an object
+	 * @param {RTCStatsReport} statsReport - The stats report to convert
+	 * @returns {Object} An object containing the stats report
+	 */
 	mapToObj(statsReport: RTCStatsReport) {
 		if (!statsReport.entries) {
 			return statsReport;
@@ -156,59 +197,52 @@ const RTT_WARNING = 0.7;
 const PACKETLOSS_LIMIT = 10;
 const PACKETLOSS_WARNING = 5;
 
+/**
+ * Determine network test result based on network statistics.
+ * @param {Throughput} networkStats - Object containing maxRTT and packetLoss properties.
+ * @returns {string} - Test result ('good', 'warning', or 'bad') or 'failed' if required properties are missing.
+ */
 export const getResultFromNetworkTest = (networkStats: Throughput) => {
-	const result = {
-		rtt: '',
-		packetLoss: '',
-	};
-
-	console.log(networkStats);
-
 	if (!networkStats) {
 		// connection failed so no stats available
 		return 'failed';
 	}
 
-	if (
+	let rtt = '';
+	let quality = '';
+
+	if (networkStats.maxRTT !== null && networkStats.maxRTT >= RTT_LIMIT) {
+		rtt = 'bad';
+	} else if (
 		networkStats.maxRTT !== null &&
-		typeof networkStats.maxRTT !== 'undefined'
+		networkStats.maxRTT >= RTT_WARNING
 	) {
-		if (networkStats.maxRTT >= RTT_LIMIT) {
-			result.rtt = 'bad';
-		} else if (networkStats.maxRTT >= RTT_WARNING) {
-			result.rtt = 'warning';
-		} else if (networkStats.maxRTT < RTT_WARNING) {
-			result.rtt = 'good';
-		}
+		rtt = 'warning';
+	} else {
+		rtt = 'good';
 	}
 
 	if (
 		networkStats.packetLoss !== null &&
-		typeof networkStats.packetLoss !== 'undefined'
+		typeof networkStats.packetLoss !== 'undefined' &&
+		networkStats.packetLoss >= PACKETLOSS_LIMIT
 	) {
-		if (networkStats.packetLoss >= PACKETLOSS_LIMIT) {
-			result.packetLoss = 'bad';
-		} else if (networkStats.packetLoss >= PACKETLOSS_WARNING) {
-			result.packetLoss = 'warning';
-		} else if (networkStats.packetLoss < PACKETLOSS_WARNING) {
-			result.packetLoss = 'good';
-		}
+		quality = 'bad';
+	} else if (
+		networkStats.packetLoss !== null &&
+		typeof networkStats.packetLoss !== 'undefined' &&
+		networkStats.packetLoss >= PACKETLOSS_WARNING
+	) {
+		quality = 'warning';
+	} else {
+		quality = 'good';
 	}
 
-	const good = result.packetLoss === 'good' && result.rtt === 'good';
-
-	const bad =
-		result.packetLoss === 'bad' ||
-		result.rtt === 'bad' ||
-		(result.rtt === 'warning' && result.packetLoss === 'warning');
-
-	if (good) {
+	if (rtt === 'good' && quality === 'good') {
 		return 'good';
-	}
-
-	if (bad) {
+	} else if (rtt === 'bad' || quality === 'bad') {
 		return 'bad';
+	} else {
+		return 'warning';
 	}
-
-	return 'warning';
 };

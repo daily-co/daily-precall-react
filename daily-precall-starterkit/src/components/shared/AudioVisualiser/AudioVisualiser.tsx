@@ -5,41 +5,30 @@ interface Props {
 	analyser: AudioAnalyser;
 }
 
-export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
-	analyser,
-}) => {
+const CANVAS_WIDTH = 300;
+const CANVAS_HEIGHT = 200;
+const CANVAS_COLOR = 'rgba(27, 235, 185, 0.5)';
+
+export const AudioVisualiser: React.FC<Props> = ({ analyser }) => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (!canvasRef.current) return;
-		if (!containerRef.current) return;
-
 		const canvas = canvasRef.current;
-		const container = containerRef.current;
-		const canvasContainerRect = container.getBoundingClientRect();
-		const canvasContext = canvas.getContext('2d');
-
-		canvas.width = canvasContainerRect.width;
-		canvas.height = canvasContainerRect.height;
+		const canvasContext = canvas?.getContext('2d');
+		if (!canvas || !canvasContext) return;
 
 		const clearCanvas = () => {
-			canvasContext?.clearRect(0, 0, canvas.width, canvas.height);
+			canvasContext.clearRect(0, 0, canvas.width, canvas.height);
 		};
 
-		const draw = (fillColor: string) => {
+		const draw = () => {
 			const dataArray = analyser.getByteFrequencyData();
 			const interestingFrequenciesBucket = dataArray.slice(
 				16,
 				dataArray.length / 8,
 			);
 
-			if (!canvasContext) {
-				return;
-			}
-
-			canvasContext.fillStyle = fillColor;
-
+			canvasContext.fillStyle = CANVAS_COLOR;
 			canvasContext.beginPath();
 
 			const bufferLength = interestingFrequenciesBucket.length;
@@ -47,14 +36,14 @@ export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
 
 			canvasContext.moveTo(0, 0);
 
-			let x = 0;
+			let horizontalPosition = 0;
 			for (let i = 0; i < bufferLength; i++) {
-				const v = interestingFrequenciesBucket[i] / 128;
-				const y = (v * canvas.height) / 2;
+				const normalizedValue = interestingFrequenciesBucket[i] / 128;
+				const verticalPosition = (normalizedValue * canvas.height) / 2;
 
-				canvasContext.lineTo(x, y);
+				canvasContext.lineTo(horizontalPosition, verticalPosition);
 
-				x += sliceWidth;
+				horizontalPosition += sliceWidth;
 			}
 
 			canvasContext.lineTo(canvas.width, 0);
@@ -62,28 +51,26 @@ export const AudioVisualiser: React.FC<React.PropsWithChildren<Props>> = ({
 
 			requestAnimationFrame(() => {
 				clearCanvas();
-				draw(fillColor);
+				draw();
 			});
 		};
 
-		draw('rgba(27, 235, 185, 0.5)');
+		canvas.width = CANVAS_WIDTH;
+		canvas.height = CANVAS_HEIGHT;
+
+		draw();
 	}, [analyser]);
 
 	return (
-		<div
-			ref={containerRef}
+		<canvas
+			ref={canvasRef}
 			style={{
-				width: '300px',
-				height: '200px',
+				width: CANVAS_WIDTH,
+				height: CANVAS_HEIGHT,
+				transform: 'rotateX(180deg)',
+				borderTop: `2px solid ${CANVAS_COLOR}`,
 				marginBottom: '1rem',
-			}}>
-			<canvas
-				ref={canvasRef}
-				style={{
-					transform: 'rotateX(180deg)',
-					borderTop: '2px solid rgba(27, 235, 185)',
-				}}
-			/>
-		</div>
+			}}
+		/>
 	);
 };

@@ -1,4 +1,4 @@
-const elementMap = new WeakMap();
+const elementMap = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
 declare global {
 	var audioContext: AudioContext;
 }
@@ -14,21 +14,17 @@ type AudioSrc =
 	| null;
 
 export class AudioAnalyser {
-	private readonly audioContext: AudioContextAnalyser;
+	private readonly analyser: AnalyserNode;
 	private readonly bufferLength: number;
 
-	private readonly analyser: AnalyserNode;
-
 	audioSrc: AudioSrc;
+	sum = 0;
+	frameId = 0;
 
-	sum!: number;
-	frameId!: number;
-
-	constructor() {
-		this.audioContext = globalThis.audioContext
-			? globalThis.audioContext
-			: new globalThis.AudioContext();
-
+	constructor(
+		private readonly audioContext: AudioContextAnalyser = globalThis.audioContext ??
+			new globalThis.AudioContext(),
+	) {
 		this.analyser = this.audioContext.createAnalyser();
 		this.bufferLength = this.analyser.frequencyBinCount;
 		this.audioSrc = null;
@@ -37,19 +33,16 @@ export class AudioAnalyser {
 	analyseStream(stream: MediaStreamTrack) {
 		const newStream = new MediaStream([stream]);
 		this.audioSrc = this.audioContext.createMediaStreamSource(newStream);
-		this.audioSrc.connect(this.analyser);
+		this.audioSrc?.connect(this.analyser);
 	}
 
 	analyseAudioElement(audioElement: HTMLAudioElement) {
-		if (elementMap.has(audioElement)) {
-			this.audioSrc = elementMap.get(audioElement);
-		} else {
-			this.audioSrc = this.audioContext.createMediaElementSource(audioElement);
-			elementMap.set(audioElement, this.audioSrc);
-		}
-		if (this.audioSrc && 'connect' in this.audioSrc) {
-			this.audioSrc.connect(this.analyser);
-		}
+		const audioSrc =
+			elementMap.get(audioElement) ??
+			this.audioContext.createMediaElementSource(audioElement);
+		elementMap.set(audioElement, audioSrc);
+		this.audioSrc = audioSrc;
+		this.audioSrc?.connect(this.analyser);
 	}
 
 	setSinkId(deviceId: string) {
@@ -61,13 +54,13 @@ export class AudioAnalyser {
 	startSamplingSound() {
 		this.frameId = 0;
 		this.sum = 0;
-		const testSound = () => {
-			this.frameId = requestAnimationFrame(() => testSound());
+		const sampleAudio = () => {
+			this.frameId = requestAnimationFrame(() => sampleAudio());
 			const dataArray = new Uint8Array(this.bufferLength);
 			this.analyser.getByteFrequencyData(dataArray);
 			this.sum += dataArray.reduce((a, b) => a + b, 0);
 		};
-		testSound();
+		sampleAudio();
 	}
 
 	isMakingSound() {

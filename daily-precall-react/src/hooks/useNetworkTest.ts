@@ -26,8 +26,8 @@ interface TestResults {
 	status: string;
 }
 
-/* Test will automatically time out after 30 seconds*/
-const TIME_OUT_IN_SECONDS = 30;
+/* Test will automatically time out after 15 seconds*/
+const TIME_OUT_IN_SECONDS = 15;
 
 const initialProtocolTestData = {
 	[CONNECTION_MODES.ALL]: {

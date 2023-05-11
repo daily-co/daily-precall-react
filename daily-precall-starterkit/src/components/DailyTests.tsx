@@ -1,10 +1,10 @@
+import { useCallback } from 'react';
 import { DailyTestProvider } from '@daily-co/daily-precall-react';
 import { useDaily, useDailyEvent } from '@daily-co/daily-react';
-import { useCallback } from 'react';
-import { logger } from '../utils/Logger';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { logger } from '../utils/Logger';
 
-export const Tests = () => {
+export const DailyTests = () => {
 	const callObject = useDaily();
 	const location = useLocation();
 
@@ -25,6 +25,7 @@ export const Tests = () => {
 					Get started 👉
 				</Link>
 			) : null}
+			{/*Where the individual components will be rendered*/}
 			<Outlet />
 		</DailyTestProvider>
 	);

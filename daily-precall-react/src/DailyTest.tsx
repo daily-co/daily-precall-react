@@ -40,9 +40,12 @@ export interface ContextValue {
 	): void;
 }
 
-export const DailyTestContext = createContext<ContextValue>(
-	null as unknown as ContextValue,
-);
+export const DailyTestContext = createContext<ContextValue>({
+	testData: {},
+	callObject: null,
+	// eslint-disable-next-line @typescript-eslint/no-empty-function
+	addTestData: () => {},
+});
 
 const testDataState = atom<DailyTestData>({
 	key: 'test-data-state',

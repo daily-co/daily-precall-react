@@ -4,11 +4,12 @@ import {
 	useDailyTest,
 	ConnectionTestReport,
 } from '@daily-co/daily-precall-react';
-import { Card } from '../shared/Card/Card';
-import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
 import { useLocalSessionId, useMediaTrack } from '@daily-co/daily-react';
 
-const TEST_DURATION = 5;
+import { Card } from '../shared/Card/Card';
+import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
+
+const TEST_DURATION = 10;
 export const ConnectionCheck: React.FC = () => {
 	const { testData } = useDailyTest();
 
@@ -19,7 +20,7 @@ export const ConnectionCheck: React.FC = () => {
 		connectionTestState,
 	} = useConnectionTest();
 
-	/* We're using the user's video and audio track for the througput test. You could
+	/* We're using the user's video and audio track for the throughput test. You could
 	 * pass other tracks here too.*/
 	const localSessionId = useLocalSessionId() ?? '';
 	const audioTrack = useMediaTrack(localSessionId, 'audio');
@@ -116,8 +117,8 @@ export const ConnectionCheck: React.FC = () => {
 			<p>
 				This is a test that sets up a RTCPeerConnection and measures a user's
 				packet loss and round trip time. The longer the test runs, the more
-				accurate its results. The default duration is 15 seconds. We recommend
-				to stop the test after 30 seconds have passed.
+				accurate its results. The test will automatically time-out after 15
+				seconds.
 			</p>
 			<p>
 				Current connection test state: <u> {connectionTestState}</u>.{' '}
