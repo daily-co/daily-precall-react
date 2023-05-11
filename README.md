@@ -1,4 +1,7 @@
 # About
+<img width="1920" alt="Screenshot 2023-05-11 at 17 33 42" src="https://github.com/daily-co/daily-precall-react/assets/12814720/672d068b-f32d-46d2-82d5-354353ca0857">
+
+
 Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
 a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
 
