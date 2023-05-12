@@ -7,6 +7,7 @@ import {
 	NetworkTestReport,
 	WebsocketsTestReport,
 } from '../src/types.ts';
+import React from 'react';
 
 const connectionTestResults: ConnectionTestReport = {
 	errors: [],
@@ -22,10 +23,8 @@ const connectionTestResults: ConnectionTestReport = {
 const networkTestResults: NetworkTestReport = {
 	errors: [],
 	id: '123',
-	result: 'warning',
+	result: 'connected',
 	startedAt: new Date(),
-	connected: [],
-	failed: [],
 };
 
 const websocketsTestResults: WebsocketsTestReport = {
