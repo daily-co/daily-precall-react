@@ -59,7 +59,7 @@ export const WebsocketsCheck: React.FC = () => {
 				Current websockets test state: <u> {websocketsTestState}</u>.
 			</p>
 			<>
-				<div>
+				<div className="options">
 					<button
 						className="button primary"
 						onClick={() => startWebsocketsTest()}

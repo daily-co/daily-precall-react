@@ -106,7 +106,7 @@ export const SpeakerCheck: React.FC = () => {
 	return (
 		<Card title="Speakers">
 			<h2>Can you hear the sound?</h2>
-			<div>
+			<div className="options">
 				<Link to={`/mic-check`} className="link primary">
 					Yes
 				</Link>

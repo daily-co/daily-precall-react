@@ -141,7 +141,7 @@ export const ConnectionCheck: React.FC = () => {
 			)}
 			{hasStreams && (
 				<>
-					<div>
+					<div className="options">
 						<button
 							className="button primary"
 							onClick={() =>

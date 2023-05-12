@@ -128,7 +128,7 @@ export const MicCheck: React.FC = () => {
 			{!hasMicError && !soundWorks && (
 				<>
 					<h2>Try making some noise!</h2>
-					<div>
+					<div className="options">
 						<Link className="link primary" to={`/network-check`}>
 							Skip this step
 						</Link>

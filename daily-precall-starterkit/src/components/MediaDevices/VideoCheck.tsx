@@ -46,7 +46,7 @@ export const VideoCheck: React.FC = () => {
 		<Card title="Camera">
 			<h2>Can you see yourself?</h2>
 			{!hasCamError && (
-				<div>
+				<div className="options">
 					<Link to={`/speaker-check`} className="link primary">
 						Yes
 					</Link>

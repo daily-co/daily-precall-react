@@ -1,4 +1,5 @@
 const elementMap = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
+
 declare global {
 	var audioContext: AudioContext;
 }
