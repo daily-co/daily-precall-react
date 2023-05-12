@@ -2,10 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TestState } from '../DailyTest.tsx';
 import { useDailyTest } from '../useDailyTest.ts';
-import { IceServerInterface, NetworkTestReport } from '../types.ts';
+import { NetworkTestReport } from '../types.ts';
 import {
 	CONNECTION_MODES,
-	CONNECTION_STATUS,
 	ConnectionModes,
 	NAT_SERVICES_LINKS,
 } from '../utils/constants.ts';
@@ -16,43 +15,23 @@ import { useTimeout } from '../utils/useTimeout.tsx';
 
 type Protocols = {
 	[key in ConnectionModes]?: {
-		result: string | null;
-		iceCandidates?: RTCIceCandidate[] | null;
+		iceCandidates: RTCIceCandidate[] | null;
+		result: string;
 	};
 };
 
 interface TestResults {
-	candidates: RTCIceCandidate[];
-	status: string;
+	iceCandidates: RTCIceCandidate[];
+	result: string;
 }
 
 /* Test will automatically time out after 15 seconds*/
 const TIME_OUT_IN_SECONDS = 15;
 
 const initialProtocolTestData = {
-	[CONNECTION_MODES.ALL]: {
-		result: null,
-		iceCandidates: null,
-	},
 	[CONNECTION_MODES.RELAY_ONLY]: {
-		result: null,
-		iceCandidates: null,
-	},
-	[CONNECTION_MODES.STUN]: {
-		result: null,
-		iceCandidates: null,
-	},
-	[CONNECTION_MODES.TURN_UDP]: {
-		result: null,
-		iceCandidates: null,
-	},
-	[CONNECTION_MODES.TURN_TCP]: {
-		result: null,
-		iceCandidates: null,
-	},
-	[CONNECTION_MODES.TURN_TLS]: {
-		result: null,
-		iceCandidates: null,
+		result: '',
+		iceCandidates: [],
 	},
 };
 
@@ -60,6 +39,7 @@ export const useNetworkTest = () => {
 	const { addTestData } = useDailyTest();
 	const [networkTestState, setNetworkTestState] = useState<TestState>('idle');
 	const prevState = useRef<TestState>('idle');
+	const mediaStreamRef = useRef<MediaStream>();
 
 	const [abortTimeout, setAbortTimeout] = useState(false);
 	const [hasTimeElapsed, setHasTimeElapsed] = useState(false);
@@ -80,35 +60,22 @@ export const useNetworkTest = () => {
 	const [protocolTestData, setProtocolTestData] = useState<Protocols>(
 		initialProtocolTestData,
 	);
+	const { addError, errors } = useCatchErrors();
 
 	useEffect(() => {
 		const isDone = Object.keys(protocolTestData).every(
-			(key) => protocolTestData[key]?.result !== null,
+			(key) => protocolTestData[key]?.result !== '',
 		);
 		if (isDone) setNetworkTestState('stopping');
 	}, [protocolTestData]);
 
-	const { errors } = useCatchErrors();
-
 	const setNetworkTestResults = useCallback(() => {
 		const results: NetworkTestReport = {
-			connected: Object.keys(protocolTestData).filter(
-				(key) => protocolTestData[key]?.result === 'connected',
-			),
-			failed: Object.keys(protocolTestData).filter(
-				(key) => protocolTestData[key]?.result === 'failed',
-			),
 			id: uuidv4(),
 			startedAt: new Date(),
 			errors: errors,
-			result:
-				protocolTestData?.[CONNECTION_MODES.RELAY_ONLY]?.result ===
-				CONNECTION_STATUS.CONNECTED
-					? 'passed'
-					: protocolTestData?.[CONNECTION_MODES.RELAY_ONLY]?.result ===
-					  CONNECTION_STATUS.FAILED
-					? 'failed'
-					: 'warning',
+			result: protocolTestData?.[CONNECTION_MODES.RELAY_ONLY]
+				?.result as NetworkTestReport['result'],
 		};
 
 		addTestData('network', results);
@@ -120,11 +87,32 @@ export const useNetworkTest = () => {
 				case 'idle':
 					break;
 				case 'starting':
+					const hasAudioTracks =
+						mediaStreamRef.current?.getAudioTracks().length;
+					const hasVideoTracks =
+						mediaStreamRef.current?.getVideoTracks().length;
+					if (!hasAudioTracks) {
+						addError(
+							'No audio track found: this may affect the network test results in Safari.',
+						);
+					}
+					if (!hasVideoTracks) {
+						addError(
+							'No video track found: this may affect the network test results in Safari.',
+						);
+					}
+
+					if (!hasVideoTracks && !hasAudioTracks) {
+						addError(
+							'No audio and video tracks found. This may affect the network test results in Safari.',
+						);
+					}
+
 					const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
 					const iceServers = await svcResp.json();
 					const testers = await Promise.all(
 						Object.keys(protocolTestData).map((test) =>
-							initiateProtocolTester(test, iceServers),
+							initiateProtocolTester(test, iceServers, mediaStreamRef.current),
 						),
 					);
 					protocolTesters.current = testers;
@@ -154,16 +142,18 @@ export const useNetworkTest = () => {
 			prevState.current = networkTestState;
 		};
 		handleNewState();
-	}, [networkTestState, protocolTestData, setNetworkTestResults]);
+	}, [addError, networkTestState, protocolTestData, setNetworkTestResults]);
 
 	async function initiateProtocolTester(
 		connectionMode: ConnectionModes,
-		iceServers: IceServerInterface[],
+		iceServers: RTCIceServer[],
+		mediaStream?: MediaStream,
 	) {
 		const instance: NetworkTester = new NetworkTester({
 			natService: 'twilio',
 			connectionMode,
 			iceServers,
+			mediaStream,
 		});
 
 		instance.setupRTCPeerConnection().then((result) => {
@@ -171,8 +161,8 @@ export const useNetworkTest = () => {
 			setProtocolTestData((prevState) => ({
 				...prevState,
 				[connectionMode]: {
-					result: testResults.status,
-					iceCandidates: testResults.candidates,
+					result: testResults.result,
+					iceCandidates: testResults.iceCandidates,
 				},
 			}));
 		});
@@ -180,7 +170,10 @@ export const useNetworkTest = () => {
 		return instance;
 	}
 
-	const startNetworkTest = useCallback(() => {
+	const startNetworkTest = useCallback(async (mediaStream?: MediaStream) => {
+		if (mediaStream) {
+			mediaStreamRef.current = mediaStream;
+		}
 		setNetworkTestState('starting');
 	}, []);
 
