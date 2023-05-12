@@ -1,9 +1,4 @@
 export const CONNECTION_MODES = {
-	ALL: 'all',
-	STUN: 'stun',
-	TURN_UDP: 'turn-udp',
-	TURN_TCP: 'turn-tcp',
-	TURN_TLS: 'turn-tls',
 	RELAY_ONLY: 'relay',
 };
 
