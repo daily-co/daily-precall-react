@@ -1,15 +1,12 @@
+/* Loopback test that checks the users internet connection. Uses the NetworkTester for this. */
+import { RTCStatsReportStat, Throughput } from '../types.ts';
 import ConnectionTester from './ConnectionTester.ts';
-import {
-	IceServerInterface,
-	RTCStatsReportStat,
-	Throughput,
-} from '../types.ts';
 
 export default class ConnectionStats {
 	intervalId: string;
 	timeoutId: string;
 	roundTripTimes: number[];
-	iceServers: IceServerInterface[];
+	iceServers: RTCIceServer[];
 	mediaStream: MediaStream;
 	networkTester: ConnectionTester | undefined;
 	peerConnection: RTCPeerConnection | undefined | null;
@@ -18,7 +15,7 @@ export default class ConnectionStats {
 		iceServers,
 		mediaStream,
 	}: {
-		iceServers: IceServerInterface[];
+		iceServers: RTCIceServer[];
 		mediaStream: MediaStream;
 	}) {
 		this.intervalId = '';
