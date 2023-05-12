@@ -3,7 +3,7 @@ import {
 	useDailyTest,
 	useWebsocketsTest,
 	WebsocketsTestReport,
-} from '@daily-co/daily-precall-react';
+} from 'daily-precall-react';
 
 import { Card } from '../shared/Card/Card';
 

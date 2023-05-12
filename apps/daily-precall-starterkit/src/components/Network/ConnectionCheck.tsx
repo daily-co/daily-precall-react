@@ -3,7 +3,7 @@ import {
 	useConnectionTest,
 	useDailyTest,
 	ConnectionTestReport,
-} from '@daily-co/daily-precall-react';
+} from 'daily-precall-react';
 import { useLocalSessionId, useMediaTrack } from '@daily-co/daily-react';
 
 import { Card } from '../shared/Card/Card';

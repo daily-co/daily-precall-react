@@ -20,6 +20,7 @@
     "noFallthroughCasesInSwitch": true,
 		"strictPropertyInitialization": false,
 		"esModuleInterop": true,
+		"declaration": true
   },
 	"include": [
 		"src/**/*",

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { DailyTestProvider } from '@daily-co/daily-precall-react';
+import { DailyTestProvider } from 'daily-precall-react';
 import { useDaily, useDailyEvent } from '@daily-co/daily-react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { logger } from '../utils/Logger';
