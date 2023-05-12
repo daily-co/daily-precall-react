@@ -1,4 +1,5 @@
 import { useNetworkTest } from '../../src/hooks/useNetworkTest.ts';
+
 import { act, renderHook, waitFor } from '@testing-library/react';
 
 const fakeFetchResults = [
@@ -31,6 +32,17 @@ const fakeFetchResults = [
 		credential: 'hello',
 	},
 ];
+
+jest.mock('../../src/utils/useCatchErrors.ts', () => {
+	return {
+		...jest.requireActual('../../src/utils/useCatchErrors'),
+		useCatchErrors: () => {
+			return {
+				addError: () => {},
+			};
+		},
+	};
+});
 describe('useNetworkTest', () => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore -- data can be `any`
@@ -46,16 +58,33 @@ describe('useNetworkTest', () => {
 		expect(typeof result.current.startNetworkTest).toBe('function');
 		expect(typeof result.current.stopNetworkTest).toBe('function');
 	});
-	it('calling startNetworkTest calls startNetworkTest', async () => {
+	it('calling startNetworkTest without MediaStream calls startNetworkTest', async () => {
 		const { result } = renderHook(() => useNetworkTest(), {});
 		(fetch as jest.Mock).mockResolvedValue(
 			createFetchResponse(fakeFetchResults),
 		);
-
 		const spy = await jest.spyOn(result.current, 'startNetworkTest');
 
-		act(() => {
-			result.current.startNetworkTest();
+		await act(async () => {
+			await result.current.startNetworkTest();
+		});
+
+		await waitFor(() => {
+			expect(spy).toBeCalled();
+			expect(result.current.networkTestState).toBe('running');
+		});
+	});
+	it('calling startNetworkTest with MediaStream calls startNetworkTest', async () => {
+		const { result } = renderHook(() => useNetworkTest(), {});
+		const fakeStream = new MediaStream([]);
+
+		(fetch as jest.Mock).mockResolvedValue(
+			createFetchResponse(fakeFetchResults),
+		);
+		const spy = await jest.spyOn(result.current, 'startNetworkTest');
+
+		await act(async () => {
+			await result.current.startNetworkTest(fakeStream);
 		});
 
 		await waitFor(() => {
