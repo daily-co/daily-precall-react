@@ -129,7 +129,7 @@ pre {
 
 
 /* Links and button */
-div:has(a):has(button) {
+.options {
 	gap: 6px;
 	display: flex;
 	margin-bottom: 1rem;
@@ -150,6 +150,7 @@ nav a.active,
 	text-align: center;
 	border-radius: 4px;
 	text-decoration: none;
+	line-height: 1;
 }
 
 nav a.nav {
