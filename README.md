@@ -15,12 +15,20 @@ git clone git@github.com:daily-co/daily-precall-react.git
 cd daily-precall-react yarn
 
 # run library
-yarn watch-lib
+yarn watch:library
 
 # run starterkit app
-yarn watch-app
+yarn watch:app
+
+# build library
+yarn build:library
+
+# build starterkit app
+yarn build:app
+
+# build both
+yarn build
 ```
-Any changes made in the library will be automatically picked up in the app.
 
 # Installation (this won't work just yet, awaiting publication)
 ```bash
