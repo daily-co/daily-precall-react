@@ -13,7 +13,7 @@ const initialThroughputTestData: ConnectionTestReport['throughput'] = {
 	maxRTT: null,
 	packetLoss: null,
 };
-const initialThroughputTestResult: ConnectionTestReport['result'] = undefined;
+const initialThroughputTestResult: ConnectionTestReport['result'] = '';
 
 export const useConnectionTest = () => {
 	const { addTestData } = useDailyTest();
