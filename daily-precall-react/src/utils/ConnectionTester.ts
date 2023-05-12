@@ -1,7 +1,7 @@
-import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
+import { RTCPeerConnectionWithBuffers } from '../types.ts';
 
 export default class ConnectionTester {
-	iceServers: RTCIceServer[] | IceServerInterface[];
+	iceServers: RTCIceServer[];
 	localPeer: RTCPeerConnectionWithBuffers | null;
 	remotePeer: RTCPeerConnectionWithBuffers | null;
 	mediaStream: MediaStream;
@@ -16,13 +16,13 @@ export default class ConnectionTester {
 
 	/**
 	 * Creates a new WebRTC connection object
-	 * @param {{iceServers: RTCIceServer[] | IceServerInterface[]; mediaStream: MediaStream;}} options
+	 * @param {{iceServers: RTCIceServer[] | mediaStream: MediaStream;}} options
 	 */
 	constructor({
 		iceServers,
 		mediaStream,
 	}: {
-		iceServers: RTCIceServer[] | IceServerInterface[];
+		iceServers: RTCIceServer[];
 		mediaStream: MediaStream;
 	}) {
 		this.iceServers = iceServers;
@@ -66,10 +66,6 @@ export default class ConnectionTester {
 		return new Promise<void>((resolve, reject) => {
 			this.connectionEstablished = resolve;
 			this.connectionFailed = reject;
-			/**
-			 * Times out the connection attempt after 15 seconds
-			 * TODO: hm
-			 */
 			this.connectionTimeout = global.setTimeout(this.connectionFailed, 15000);
 		});
 	}
@@ -159,6 +155,7 @@ export default class ConnectionTester {
 	}
 
 	addStream() {
+		if (!this.mediaStream) return;
 		this.mediaStream.getTracks().forEach((track) => {
 			this.localPeer?.addTrack(track);
 			this.remotePeer?.addTrack(track);

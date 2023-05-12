@@ -1,13 +1,14 @@
-import { CONNECTION_MODES, CONNECTION_STATUS } from './constants.ts';
-import { IceServerInterface, RTCPeerConnectionWithBuffers } from '../types.ts';
+import { CONNECTION_STATUS } from './constants.ts';
+import { RTCPeerConnectionWithBuffers } from '../types.ts';
 
 export default class NetworkTester {
 	/**
 	 * Contains the STUN or TURN servers for the connection.
 	 */
-	iceServers: RTCIceServer[] | IceServerInterface[];
+	iceServers: RTCIceServer[];
 	connectionMode: string;
 	natService: string;
+	mediaStream?: MediaStream; // There is a bug in Safari where this test will fail if there is no media stream (?)
 
 	localPeer: RTCPeerConnectionWithBuffers | null;
 	remotePeer: RTCPeerConnectionWithBuffers | null;
@@ -33,8 +34,8 @@ export default class NetworkTester {
 	event: Event;
 
 	resolve: (value: {
-		iceCandidates?: IceServerInterface[];
-		status: string;
+		result: string;
+		iceCandidates: RTCIceCandidate[] | null | undefined;
 	}) => void;
 	reject: () => void;
 
@@ -43,45 +44,24 @@ export default class NetworkTester {
 	 * @constructor
 	 * @param {string} natService - The NAT service to use for the connection.
 	 * @param {string} connectionMode - The connection mode to use for the connection.
-	 * @param {IceServerInterface[]} iceServers - The array of STUN or TURN servers to use for the connection.
+	 * @param {RTCIceServer[]} iceServers - The array of STUN or TURN servers to use for the connection.
+	 * @param mediaStream - optional, only needed for Safari
 	 */
 	constructor({
 		natService,
-		connectionMode = CONNECTION_MODES.ALL,
+		connectionMode,
 		iceServers,
+		mediaStream,
 	}: {
 		natService: string;
 		connectionMode: string;
-		iceServers: IceServerInterface[];
+		iceServers: RTCIceServer[];
+		mediaStream?: MediaStream;
 	}) {
-		switch (connectionMode) {
-			case 'all':
-				this.iceServers = iceServers;
-				break;
-			case 'stun':
-				this.iceServers = iceServers.filter(
-					(url) =>
-						url?.url?.startsWith('stun:') || url?.urls?.startsWith('stun:'),
-				);
-				break;
-			case 'turn-udp':
-				this.iceServers = iceServers.filter(
-					(url) => url?.url?.startsWith('turn:') && url?.url?.endsWith('udp'),
-				);
-				break;
-			case 'turn-tcp':
-				this.iceServers = iceServers.filter(
-					(url) => url?.url?.startsWith('turn:') && url?.url?.endsWith('tcp'),
-				);
-				break;
-			case 'turn-tls':
-				this.iceServers = iceServers.filter((url) => url?.url?.includes('443'));
-				break;
-			default:
-				this.iceServers = iceServers;
-		}
 		this.connectionMode = connectionMode;
+		this.mediaStream = mediaStream;
 		this.natService = natService;
+		this.iceServers = iceServers;
 		this.localPeer = null;
 		this.remotePeer = null;
 		this.constraints = {
@@ -106,9 +86,10 @@ export default class NetworkTester {
 	 * @returns {Promise<unknown>} A promise that resolves when the RTCPeerConnection is established.
 	 */
 	async setupRTCPeerConnection(): Promise<unknown> {
-		const iceTransportPolicy = this.connectionMode.startsWith('turn')
-			? 'relay'
-			: 'all';
+		if (!global.RTCPeerConnection) {
+			return;
+		}
+		const iceTransportPolicy = 'relay';
 
 		const rtcConfig: RTCConfiguration = {
 			iceServers: this.iceServers as RTCIceServer[],
@@ -134,10 +115,12 @@ export default class NetworkTester {
 			// Set up a timeout to resolve the promise after 15 seconds.
 			this.resolve = resolve;
 			this.reject = reject;
+
+			// in case the setup takes too long it'll fail, this happens in edge cases when you cant connect to the turn server
 			this.connectionTimeout = global.setTimeout(() => {
 				const connectionInfo = this.getConnectionInfo();
 				this.resolve(connectionInfo);
-			}, 15000); //@TODO variable?
+			}, 15000);
 
 			// Set up a timeout to flush the ice candidates after 7.5 seconds of gathering.
 			this.flushTimeout = global.setTimeout(() => {
@@ -156,14 +139,6 @@ export default class NetworkTester {
 
 		// Handle local peer ICE candidates.
 		this.localPeer.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-			if (
-				this.connectionMode === CONNECTION_MODES.STUN &&
-				event.candidate?.type === 'host'
-			) {
-				// Don't allow host candidates in STUN mode.
-				return;
-			}
-
 			if (!event.candidate || !event.candidate.candidate) {
 				// Flush ICE candidates if no candidate is available.
 				this.flushIceCandidates(this.remotePeer);
@@ -199,8 +174,19 @@ export default class NetworkTester {
 	}
 
 	async start() {
+		if (this.mediaStream) {
+			this.addStream();
+		}
 		await this.createOffer();
 		await this.createAnswer();
+	}
+
+	addStream() {
+		if (!this.mediaStream) return;
+		this.mediaStream.getTracks().forEach((track) => {
+			this.localPeer?.addTrack(track);
+			this.remotePeer?.addTrack(track);
+		});
 	}
 
 	flushIceCandidates(peer: RTCPeerConnectionWithBuffers | null) {
@@ -241,30 +227,30 @@ export default class NetworkTester {
 				this.localPeer,
 			);
 		} catch (error) {
-			console.error('Failed to create answer:', error);
+			// swallow
 		}
 	}
 
 	/**
 	 * Returns information about the current WebRTC connection.
-	 * @returns {Object} An object with `candidates` and `status` properties.
+	 * @returns {Object} An object with `candidates` and `result` properties.
 	 */
 	getConnectionInfo() {
 		// Get local ice candidates, connection state, and ice connection state.
-		const candidates = this.localPeer?.iceCandidates;
+		const iceCandidates = this.localPeer?.iceCandidates;
 		const state = this.localPeer?.connectionState;
 		const iceState = this.localPeer?.iceConnectionState;
 
 		// Determine the connection status based on the connection and ice connection states.
-		const status =
+		const result =
 			state || iceState === 'connected'
 				? CONNECTION_STATUS.CONNECTED
 				: CONNECTION_STATUS.FAILED;
 
 		// Return an object with the candidates and status.
 		return {
-			candidates,
-			status,
+			iceCandidates,
+			result,
 		};
 	}
 
