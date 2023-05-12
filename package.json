@@ -5,11 +5,12 @@
 		"packages/*"
 	],
 	"scripts": {
-		"watch": "yarn --cwd apps/daily-react-starterkit start",
-		"dev": "npm-run-all --parallel watch"
+		"start:app": "yarn build:library && yarn workspace apps/daily-precall-starterkit watch",
+		"start:library": "yarn workspace packages/daily-precall-react watch",
+		"build:app": "yarn build:lib && yarn workspace apps/daily-precall-starterkit build",
+		"build:library": "yarn workspace packages/daily-precall-react build"
 	},
 	"devDependencies": {
-		"npm-run-all": "^4.1.5",
 		"vite": "latest"
 	}
 }
