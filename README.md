@@ -1,33 +1,23 @@
 # About
 <img width="1920" alt="Screenshot 2023-05-11 at 17 33 42" src="https://github.com/daily-co/daily-precall-react/assets/12814720/672d068b-f32d-46d2-82d5-354353ca0857">
 
-
 Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
 a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
 
 # Running locally (do this for now)
-This repo uses Yarn and Yarn workspaces.
+This repo uses Yarn, Yarn workspaces, and [Turborepo](https://turbo.build/).
 ```bash
 # clone repo
 git clone git@github.com:daily-co/daily-precall-react.git
 
 # install dependencies (do this in the root folder :-))
-cd daily-precall-react yarn
+yarn install
 
-# run library
-yarn watch:library
+# dev
+turbo dev
 
-# run starterkit app
-yarn watch:app
-
-# build library
-yarn build:library
-
-# build starterkit app
-yarn build:app
-
-# build both
-yarn build
+# build
+turbo build
 ```
 
 # Installation (this won't work just yet, awaiting publication)
@@ -93,10 +83,12 @@ function DailyTests() {
 ```
 Learn more about Daily Precall React by reading our docs at [TODO].
 
-
 # Testing
-We've set up automatic tests for the library using Jest and React Testing Library. You can run the tests inside the `daily-precall-react` folder using the following command:
+We've set up automatic tests for the library using Jest and React Testing Library. You can run the tests from the root folder using the following command:
 
 ```bash
-yarn test
+turbo test
+
+# watching tests
+turbo test:watch
 ```
