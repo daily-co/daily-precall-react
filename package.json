@@ -4,12 +4,6 @@
 		"apps/*",
 		"packages/*"
 	],
-	"scripts": {
-		"watch:app": "yarn workspace daily-precall-starterkit watch",
-		"watch:library": "yarn workspace daily-precall-react watch",
-		"build:app": "yarn workspace daily-precall-starterkit build",
-		"build:library": "yarn workspace daily-precall-react build"
-	},
 	"devDependencies": {
 		"vite": "latest"
 	}
