@@ -8,6 +8,7 @@ import { useLocalSessionId, useMediaTrack } from '@daily-co/daily-react';
 
 import { Card } from '../shared/Card/Card';
 import { TroubleShooting } from '../shared/TroubleShooting/TroubleShooting';
+import { Link } from 'react-router-dom';
 
 const TEST_DURATION = 10;
 export const ConnectionCheck: React.FC = () => {
@@ -168,6 +169,11 @@ export const ConnectionCheck: React.FC = () => {
 							Stop connection check
 						</button>
 					</div>
+					{connectionTestState === 'finished' && (
+						<Link to={`/websockets-check`} className="link ghost">
+							Continue to next check
+						</Link>
+					)}
 
 					<div>
 						{testData?.connection && (

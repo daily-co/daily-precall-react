@@ -11,10 +11,8 @@ import React from 'react';
 
 const connectionTestResults: ConnectionTestReport = {
 	errors: [],
-	id: '123',
 	result: 'good',
-	startedAt: new Date(),
-	throughput: {
+	data: {
 		maxRTT: 0,
 		packetLoss: 0,
 	},
@@ -22,16 +20,12 @@ const connectionTestResults: ConnectionTestReport = {
 
 const networkTestResults: NetworkTestReport = {
 	errors: [],
-	id: '123',
 	result: 'connected',
-	startedAt: new Date(),
 };
 
 const websocketsTestResults: WebsocketsTestReport = {
 	errors: [],
-	id: '123',
 	result: 'warning',
-	startedAt: new Date(),
 	passed: [],
 	failed: [],
 };

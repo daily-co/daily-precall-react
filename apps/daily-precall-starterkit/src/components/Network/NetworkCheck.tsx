@@ -7,6 +7,7 @@ import {
 
 import { Card } from '../shared/Card/Card';
 import { useLocalSessionId, useMediaTrack } from '@daily-co/daily-react';
+import { Link } from 'react-router-dom';
 
 export const NetworkCheck: React.FC = () => {
 	const { testData } = useDailyTest();
@@ -71,7 +72,7 @@ export const NetworkCheck: React.FC = () => {
 				This test checks if the user's network allows them to talk other
 				networks. It either passes or not. If it doesn't pass, we recommend
 				using the{' '}
-				<a href="https://network-test.daily.co/index.html">
+				<a href="https://network-test.daily.co/index.html" target="_blank">
 					Daily network debugger
 				</a>{' '}
 				to dig into why.
@@ -102,6 +103,11 @@ export const NetworkCheck: React.FC = () => {
 						Stop network check
 					</button>
 				</div>
+				{networkTestState === 'finished' && (
+					<Link to={`/connection-check`} className="link ghost">
+						Continue to next check
+					</Link>
+				)}
 
 				<div>
 					{testData?.network && (

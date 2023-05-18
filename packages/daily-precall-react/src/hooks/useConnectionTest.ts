@@ -6,10 +6,9 @@ import ConnectionStats, {
 	getResultFromNetworkTest,
 } from '../utils/ConnectionStats.ts';
 import { NAT_SERVICES_LINKS } from '../utils/constants.ts';
-import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.ts';
 
-const initialThroughputTestData: ConnectionTestReport['throughput'] = {
+const initialThroughputTestData: ConnectionTestReport['data'] = {
 	maxRTT: null,
 	packetLoss: null,
 };
@@ -45,10 +44,8 @@ export const useConnectionTest = () => {
 	const setConnectionTestResults = useCallback(() => {
 		const results: ConnectionTestReport = {
 			errors: errors,
-			id: uuidv4(),
 			result: throughputTestResult.current,
-			startedAt: new Date(),
-			throughput: throughputTestData.current,
+			data: throughputTestData.current,
 		};
 		addTestData('connection', results);
 	}, [addTestData, errors]);

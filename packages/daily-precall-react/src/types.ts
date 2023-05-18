@@ -19,26 +19,20 @@ export interface Throughput {
 
 export interface ConnectionTestReport {
 	errors?: ErrorEvent[];
-	id: string;
 	result: 'bad' | 'good' | 'warning' | 'failed' | '';
-	startedAt: Date;
-	throughput: Throughput | null;
+	data: Throughput | null;
 }
 
 export interface NetworkTestReport {
 	errors?: ErrorEvent[];
-	id: string;
 	result: 'connected' | 'failed' | '';
-	startedAt: Date;
 }
 
 export interface WebsocketsTestReport {
 	errors?: ErrorEvent[];
 	failed: string[];
-	id: string;
 	passed: string[];
 	result: string | 'passed' | 'failed' | 'warning' | '';
-	startedAt: Date;
 }
 
 export declare type ErrorEvent = {
