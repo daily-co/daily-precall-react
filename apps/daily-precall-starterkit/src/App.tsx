@@ -48,7 +48,7 @@ export const App = () => {
 				<p>
 					The Daily API makes implementing a precall test a breeze, especially
 					when combined with the{' '}
-					<a href="https://docs.daily.co/reference/daily-react">
+					<a href="https://docs.daily.co/reference/daily-react" target="_blank">
 						Daily React library
 					</a>
 					. This app demonstrates how to do network and device checks.
