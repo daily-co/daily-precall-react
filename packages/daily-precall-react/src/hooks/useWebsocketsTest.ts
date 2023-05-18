@@ -3,7 +3,6 @@ import { startWebsocketTests, TestRegion } from '../utils/WebSocketTester.ts';
 import { TestState } from '../DailyTest.tsx';
 import { useDailyTest } from '../useDailyTest.ts';
 import { WebsocketsTestReport } from '../types.ts';
-import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.ts';
 import { useTimeout } from '../utils/useTimeout.tsx';
 
@@ -104,10 +103,8 @@ export const useWebsocketsTest = () => {
 		const results: WebsocketsTestReport = {
 			errors: errors,
 			failed: failed,
-			id: uuidv4(),
 			passed: passed,
 			result: verdict,
-			startedAt: new Date(),
 		};
 
 		addTestData('websockets', results);

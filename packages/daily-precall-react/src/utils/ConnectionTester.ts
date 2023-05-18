@@ -194,7 +194,7 @@ export default class ConnectionTester {
 	}
 
 	/**
-	 * Legacy callback function called when the local ICE connection state changes.
+	 * Callback function called when the local ICE connection state changes.
 	 * @returns {void}
 	 */
 	onIceConnectionStateChange(): void {

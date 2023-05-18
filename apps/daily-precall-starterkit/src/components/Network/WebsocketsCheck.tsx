@@ -6,6 +6,7 @@ import {
 } from 'daily-precall-react';
 
 import { Card } from '../shared/Card/Card';
+import { Link } from 'react-router-dom';
 
 export const WebsocketsCheck: React.FC = () => {
 	const { testData } = useDailyTest();
@@ -78,9 +79,14 @@ export const WebsocketsCheck: React.FC = () => {
 							websocketsTestState === 'idle' ||
 							websocketsTestState === 'finished'
 						}>
-						Stop network check
+						Stop websockets check
 					</button>
 				</div>
+				{websocketsTestState === 'finished' && (
+					<Link to={`/`} className="link ghost">
+						Redo test
+					</Link>
+				)}
 
 				<div>
 					{testData?.websockets && (

@@ -9,7 +9,6 @@ import {
 	NAT_SERVICES_LINKS,
 } from '../utils/constants.ts';
 import NetworkTester from '../utils/NetworkTester.ts';
-import { v4 as uuidv4 } from 'uuid';
 import { useCatchErrors } from '../utils/useCatchErrors.ts';
 import { useTimeout } from '../utils/useTimeout.tsx';
 
@@ -71,8 +70,6 @@ export const useNetworkTest = () => {
 
 	const setNetworkTestResults = useCallback(() => {
 		const results: NetworkTestReport = {
-			id: uuidv4(),
-			startedAt: new Date(),
 			errors: errors,
 			result: protocolTestData?.[CONNECTION_MODES.RELAY_ONLY]
 				?.result as NetworkTestReport['result'],
