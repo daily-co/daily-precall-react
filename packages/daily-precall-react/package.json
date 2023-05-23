@@ -9,8 +9,9 @@
     "test": "jest",
 		"test:watch": "jest --watch",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
-  },
+    "preview": "vite preview",
+		"postinstall": "tsc && vite build"
+	},
   "dependencies": {
     "@daily-co/daily-js": "^0.44.0",
     "react": "^18.2.0",
