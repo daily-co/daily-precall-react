@@ -161,7 +161,8 @@ export const VideoCheck: React.FC = () => {
 						{cameras?.map((camera) => (
 							<option
 								key={`cam-${camera.device.deviceId}`}
-								value={camera.device.deviceId}>
+								value={camera.device.deviceId}
+								selected={camera.selected === true}>
 								{camera.device.label}
 							</option>
 						))}
