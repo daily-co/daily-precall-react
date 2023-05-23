@@ -10,17 +10,23 @@ This repo contains two folders: `daily-precall-react`, a helper library, and `da
 # How to install
 We recommend you [fork this repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo), so you can use it as a starting point for your own precall experience.
 
-This repo uses Yarn, Yarn workspaces, and [Turborepo](https://turbo.build/).
+This repo uses Yarn, Yarn workspaces, and [Turborepo](https://turbo.build/). The quickest way to get started is to install Turbo globally on your local machine.
 
 ```bash
 # clone repo (replace url with the location of your fork)
 git clone git@github.com:daily-co/daily-precall-react.git
 
+# install turbo globally (Yarn)
+yarn global add turbo
+
+# install turbo globally (npm)
+npm install turbo --global 
+
 # install dependencies (do this in the root folder :-))
 yarn install
 
 # run both the app and library in tandem
-turbo dev
+turbo dev 
 
 # build both the app and the library
 turbo build
