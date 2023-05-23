@@ -46,8 +46,8 @@ export const App = () => {
 			<header>
 				<img src="../logo.svg" alt="Daily logo" />
 				<p>
-					Hi! The Daily API makes implementing a precall test a breeze,
-					especially when combined with the{' '}
+					The Daily API makes implementing a precall test a breeze, especially
+					when combined with the{' '}
 					<a href="https://docs.daily.co/reference/daily-react" target="_blank">
 						Daily React library
 					</a>
