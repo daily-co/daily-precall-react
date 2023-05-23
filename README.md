@@ -1,92 +1,45 @@
 # About
 <img width="1920" alt="Screenshot 2023-05-11 at 17 33 42" src="https://github.com/daily-co/daily-precall-react/assets/12814720/672d068b-f32d-46d2-82d5-354353ca0857">
 
-Daily Precall React makes it easier to integrate a Daily-based precall workflow into your React app. This repo contains two folders: `daily-precall-react`,
-a helper library, and `daily-precall-starterkit`, an example application showing how to use `daily-precall-react` in your own app.
 
-# Running locally (do this for now)
+This repository demonstrates how to create a precall experience using the [Daily Client SDK for Javascript](https://docs.daily.co/guides/products/client-sdk) and [Daily React](https://docs.daily.co/reference/daily-react).
+A good precall experience where users can check their devices and test their network conditions is a great way to proactively tackle any potential in-call issues.
+
+This repo contains two folders: `daily-precall-react`, a helper library, and `daily-precall-starterkit`, a precall experience application.
+
+# How to install
+We recommend you [fork this repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo), so you can use it as a starting point for your own precall experience.
+
 This repo uses Yarn, Yarn workspaces, and [Turborepo](https://turbo.build/).
+
 ```bash
-# clone repo
+# clone repo (replace url with the location of your fork)
 git clone git@github.com:daily-co/daily-precall-react.git
 
 # install dependencies (do this in the root folder :-))
 yarn install
 
-# dev
+# run both the app and library in tandem
 turbo dev
 
-# build
+# build both the app and the library
 turbo build
 ```
 
-# Installation (this won't work just yet, awaiting publication)
-```bash
-# connection and device checks
-yarn install @daily-co/daily-react-precall @daily-co/daily-js @daily-co/daily-react recoil
-```
+# How to use
+Once you've followed the installation steps, you can run `turbo dev` to get the repo up and running. This command will start watching changes in both the app (which you'll find in `apps/daily-precall-starterkit`) and the library, which is found in `packages/daily-precall-react`. Any changes you make in either of these packages will be picked up by the other. 
 
-Notice that both `@daily-co/daily-react` and `@daily-co/daily-react-precall` require `@daily-co/daily-js` as a peer dependency, and that
-`@daily-co/daily-react` requires `recoil` as a peer dependency.
+The starterkit can be found on `http://127.0.0.1:5173/` -- note that the port might change depending on any other processes you have running. You'll always find the URL in your terminal:
 
-# Usage
-You'll need to install both `daily-precall-react` and [`daily-react`](https://docs.daily.co/reference/daily-react) since you'll need access to a `callObject` in order
-to run the tests. You can get started by first including [`DailyProvider`](https://docs.daily.co/reference/daily-react/daily-provider) in your app:
+<img width="550" alt="Screenshot 2023-05-23 at 12 59 44" src="https://github.com/daily-co/daily-precall-react/assets/12814720/49c8dab5-fff4-4925-b9ce-7b552706622c">
 
-```typescript jsx
-import { useEffect, useState } from 'react';
-import { DailyProvider } from '@daily-co/daily-react';
-import DailyIframe, { DailyCall } from '@daily-co/daily-js';
-
-function App() {
-  const [callObject, setCallObject] = useState<null>(null);
-    // Create call object
-    useEffect(() => {
-      const co = DailyIframe.createCallObject();
-      setCallObject(co);
-
-    return () => {
-      setCallObject(null);
-    };
-  }, []);
-  
-  return (
-    <DailyProvider callObject={callObject}>
-      <DailyTests/>
-    </DailyProvider>
-  )
-}
-```
-
-Then inside your `App` include `DailyTestProvider`:
-
-```typescript jsx
-import { DailyProvider, useDaily } from '@daily-co/daily-react';
-import { DailyTestProvider, useDailyTest, useConnectionTest } from 
-'@daily-co/daily-react-precall';
-
-function DailyTests() {
-  const callObject = useDaily();
-  const { testData } = useDailyTest();
-  const { startConnectionTest } = useConnectionTest();
-
- return (
-    <DailyTestProvider callObject={callObject}>
-      <>
-        <button onClick={() => startConnectionTest()}>Start test</button>
-        <h1>Raw results</h1>
-        <pre>{JSON.stringify(testData?.connection, null, 2)}</pre>
-      </>
-    </DailyTestProvider>
-  )
-}
-```
-Learn more about Daily Precall React by reading our docs at [TODO].
+For both packages, we use [Vite](https://vitejs.dev/) for development and building.
 
 # Testing
 We've set up automatic tests for the library using Jest and React Testing Library. You can run the tests from the root folder using the following command:
 
 ```bash
+# run all tests
 turbo test
 
 # watching tests
