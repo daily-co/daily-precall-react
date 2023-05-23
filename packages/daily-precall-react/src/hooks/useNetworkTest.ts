@@ -105,6 +105,7 @@ export const useNetworkTest = () => {
 						);
 					}
 
+					console.log('hi :)');
 					const svcResp = await fetch(NAT_SERVICES_LINKS.TWILIO);
 					const iceServers = await svcResp.json();
 					const testers = await Promise.all(
