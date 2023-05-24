@@ -16,16 +16,18 @@ This repo uses Yarn, Yarn workspaces, and [Turborepo](https://turbo.build/). The
 # clone repo (replace url with the location of your fork)
 git clone git@github.com:daily-co/daily-precall-react.git
 
-# install turbo globally (Yarn)
+# install Turbo globally (Yarn)
 yarn global add turbo
-
-# install turbo globally (npm)
+# or for npm users
 npm install turbo --global 
 
-# install dependencies (do this in the root folder :-))
+# go to root folder
+cd daily-precall-react
+
+# install dependencies
 yarn install
 
-# run both the app and library in tandem
+# run both the app and library
 turbo dev 
 
 # build both the app and the library
