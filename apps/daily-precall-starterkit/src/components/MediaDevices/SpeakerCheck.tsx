@@ -149,11 +149,11 @@ export const SpeakerCheck: React.FC = () => {
 					<select
 						name="speakerOptions"
 						id="speakerSelect"
-						defaultValue={selectedSpeaker?.device.label}
 						onChange={updateSpeakers}>
 						{speakers.map((speaker) => (
 							<option
 								key={`speaker-${speaker.device.deviceId}`}
+								selected={speaker.selected}
 								value={speaker.device.deviceId}>
 								{speaker.device.label}
 							</option>

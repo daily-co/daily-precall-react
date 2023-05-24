@@ -54,10 +54,6 @@ export const MicCheck: React.FC = () => {
 		return () => clearInterval(intervalId);
 	}, [micAnalyser]);
 
-	const selectedMicrophone = useMemo(() => {
-		return microphones.find((s) => s.selected);
-	}, [microphones]);
-
 	return (
 		<Card title="Microphone">
 			{/* An error is detected by Daily.
@@ -179,14 +175,11 @@ export const MicCheck: React.FC = () => {
 			{microphones.length > 0 && (
 				<form>
 					<label htmlFor="micOptions">Select your microphone:</label>
-					<select
-						name="micOptions"
-						id="micSelect"
-						defaultValue={selectedMicrophone?.device.label}
-						onChange={updateMicrophone}>
+					<select name="micOptions" id="micSelect" onChange={updateMicrophone}>
 						{microphones.map((mic) => (
 							<option
 								key={`mic-${mic.device.deviceId}`}
+								selected={mic.selected}
 								value={mic.device.deviceId}>
 								{mic.device.label}
 							</option>

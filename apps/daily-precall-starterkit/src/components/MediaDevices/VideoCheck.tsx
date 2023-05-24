@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	useVideoTrack,
 	useDevices,
@@ -161,8 +161,8 @@ export const VideoCheck: React.FC = () => {
 						{cameras?.map((camera) => (
 							<option
 								key={`cam-${camera.device.deviceId}`}
-								value={camera.device.deviceId}
-								selected={camera.selected === true}>
+								selected={camera.selected}
+								value={camera.device.deviceId}>
 								{camera.device.label}
 							</option>
 						))}
