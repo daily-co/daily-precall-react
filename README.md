@@ -37,7 +37,7 @@ turbo build
 # How to use
 Once you've followed the installation steps, you can run `turbo dev` to get the repo up and running. This command will start watching changes in both the app (which you'll find in `apps/daily-precall-starterkit`) and the library, which is found in `packages/daily-precall-react`. Any changes you make in either of these packages will be picked up by the other. 
 
-The starterkit can be found on `http://127.0.0.1:5173/` -- note that the port might change depending on any other processes you have running. You'll always find the URL in your terminal:
+The starterkit can be found on `http://127.0.0.1:5174/` -- note that the port might change depending on any other processes you have running. You'll always find the URL in your terminal:
 
 <img width="550" alt="Screenshot 2023-05-23 at 12 59 44" src="https://github.com/daily-co/daily-precall-react/assets/12814720/49c8dab5-fff4-4925-b9ce-7b552706622c">
 
