@@ -1,7 +1,4 @@
 # About
-<img width="1920" alt="Screenshot 2023-05-11 at 17 33 42" src="https://github.com/daily-co/daily-precall-react/assets/12814720/672d068b-f32d-46d2-82d5-354353ca0857">
-
-
 This repository demonstrates how to create a precall experience using the [Daily Client SDK for Javascript](https://docs.daily.co/guides/products/client-sdk) and [Daily React](https://docs.daily.co/reference/daily-react).
 A good precall experience where users can check their devices and test their network conditions is a great way to proactively tackle any potential in-call issues.
 
