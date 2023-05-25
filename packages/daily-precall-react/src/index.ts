@@ -8,4 +8,5 @@ export type {
 	ConnectionTestReport,
 	NetworkTestReport,
 	WebsocketsTestReport,
+	DailyTestData,
 } from './types.ts';

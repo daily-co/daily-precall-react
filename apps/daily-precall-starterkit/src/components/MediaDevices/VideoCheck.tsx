@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
 	useVideoTrack,
 	useDevices,
@@ -33,6 +33,10 @@ export const VideoCheck: React.FC = () => {
 	const updateCamera = (ev: React.ChangeEvent<HTMLSelectElement>) => {
 		setCamera(ev.target.value);
 	};
+
+	const selectedCamera = useMemo(() => {
+		return cameras.find((c) => c.selected);
+	}, [cameras]);
 
 	const showTroubleShootingToggle = () => {
 		if (showTroubleshooting) {
@@ -157,11 +161,11 @@ export const VideoCheck: React.FC = () => {
 					<select
 						name="cameraOptions"
 						id="cameraSelect"
+						defaultValue={selectedCamera?.device.label}
 						onChange={updateCamera}>
 						{cameras?.map((camera) => (
 							<option
 								key={`cam-${camera.device.deviceId}`}
-								selected={camera.selected}
 								value={camera.device.deviceId}>
 								{camera.device.label}
 							</option>

@@ -29,12 +29,6 @@
 	width: 100%;
 }
 
-.card > div:has(button ~ button) {
-	display: flex;
-	gap: 1rem;
-	margin-bottom: 1rem;
-}
-
 .card > .ghost {
 	margin-bottom: 1rem;
 }

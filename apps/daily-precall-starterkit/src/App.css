@@ -127,12 +127,20 @@ pre {
 	padding: 1rem;
 }
 
-
+h1 + p {
+	margin-top: 1em;
+}
 /* Links and button */
 .options {
-	gap: 6px;
 	display: flex;
-	margin-bottom: 1rem;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+a, a:active, a:visited {
+	text-decoration: none;
+	border-bottom: 1px solid rgba(var(--dark-grey), 0.5);
+	color: rgba(var(--dark-grey));
 }
 
 nav a.nav,
@@ -178,6 +186,14 @@ nav a.active {
 	border-right: 0;
 	border-bottom: 2px solid rgba(var(--accent));
 	border-left: 0;
+}
+
+.link.special {
+	background: rgba(var(--accent));
+	font-size: 1.5rem;
+	margin-top: 1rem;
+	margin-bottom: 2rem;
+	padding: 1rem;
 }
 
 .button.ghost:hover,

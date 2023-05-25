@@ -4,6 +4,7 @@ import { DailyCall } from '@daily-co/daily-js';
 
 import {
 	ConnectionTestReport,
+	DailyTestData,
 	NetworkTestReport,
 	WebsocketsTestReport,
 } from './types.ts';
@@ -24,12 +25,6 @@ type TestDataKey =
 	| 'network'
 	| 'connection'
 	| 'websockets';
-
-interface DailyTestData {
-	network?: NetworkTestReport;
-	connection?: ConnectionTestReport;
-	websockets?: WebsocketsTestReport;
-}
 
 export interface ContextValue {
 	testData: DailyTestData;
