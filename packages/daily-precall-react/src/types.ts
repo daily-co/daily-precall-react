@@ -39,3 +39,9 @@ export declare type ErrorEvent = {
 	error: DailyNonFatalErrorType | DailyFatalErrorType | string;
 	timestamp: Date;
 };
+
+export interface DailyTestData {
+	network?: NetworkTestReport;
+	connection?: ConnectionTestReport;
+	websockets?: WebsocketsTestReport;
+}

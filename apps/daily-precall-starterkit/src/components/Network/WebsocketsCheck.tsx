@@ -82,11 +82,6 @@ export const WebsocketsCheck: React.FC = () => {
 						Stop websockets check
 					</button>
 				</div>
-				{websocketsTestState === 'finished' && (
-					<Link to={`/`} className="link ghost">
-						Redo test
-					</Link>
-				)}
 
 				<div>
 					{testData?.websockets && (
@@ -99,6 +94,11 @@ export const WebsocketsCheck: React.FC = () => {
 						</>
 					)}
 				</div>
+				{websocketsTestState === 'finished' && (
+					<Link to={`/results`} className="link special">
+						👉 See all test results
+					</Link>
+				)}
 			</>
 		</Card>
 	);

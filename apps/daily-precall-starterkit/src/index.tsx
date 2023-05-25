@@ -9,6 +9,7 @@ import { SpeakerCheck } from './components/MediaDevices/SpeakerCheck';
 import { MicCheck } from './components/MediaDevices/MicCheck';
 import { ConnectionCheck } from './components/Network/ConnectionCheck';
 import { WebsocketsCheck } from './components/Network/WebsocketsCheck';
+import { Results } from './components/Results';
 
 const router = createBrowserRouter([
 	{
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
 			{
 				path: 'websockets-check',
 				element: <WebsocketsCheck />,
+			},
+			{
+				path: 'results',
+				element: <Results />,
 			},
 		],
 	},
