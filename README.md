@@ -1,7 +1,6 @@
 # About
 <img width="1912" alt="Screenshot 2023-05-25 at 16 27 06" src="https://github.com/daily-co/daily-precall-react/assets/12814720/772cfd7c-63d4-4150-b32e-671731fcbf36">
 
-
 This repository demonstrates how to create a precall experience using the [Daily Client SDK for Javascript](https://docs.daily.co/guides/products/client-sdk) and [Daily React](https://docs.daily.co/reference/daily-react).
 A good precall experience where users can check their devices and test their network conditions is a great way to proactively tackle any potential in-call issues.
 
@@ -39,7 +38,7 @@ Once you've followed the installation steps, you can run `turbo dev` to get the 
 
 The starterkit can be found on `http://127.0.0.1:5174/` -- note that the port might change depending on any other processes you have running. You'll always find the URL in your terminal:
 
-<img width="550" alt="Screenshot 2023-05-23 at 12 59 44" src="https://github.com/daily-co/daily-precall-react/assets/12814720/49c8dab5-fff4-4925-b9ce-7b552706622c">
+<img width="541" alt="Screenshot 2023-05-25 at 16 30 12" src="https://github.com/daily-co/daily-precall-react/assets/12814720/1e3b4ea6-c03c-4808-9c9d-7a8c8e47ba74">
 
 For both packages, we use [Vite](https://vitejs.dev/) for development and building.
 
