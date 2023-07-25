@@ -6,10 +6,8 @@ dist
 .parcel-cache
 coverage
 .idea
-package-lock.
 .vercel
 .env
 build
-yarn.lock
 .turbo
 .yarn/*
