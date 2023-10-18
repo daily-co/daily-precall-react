@@ -18,7 +18,6 @@ export const SpeakerCheck: React.FC = () => {
   const { speakers, setSpeaker, currentSpeaker } = useDevices();
   const useragent = getUserAgent();
   const isFirefox = useragent.includes('Firefox');
-  console.log({ isFirefox });
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
