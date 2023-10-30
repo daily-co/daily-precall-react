@@ -1,0 +1,9 @@
+.loader-container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+img {
+  transform: translate3d(0, 0, 0);
+}
