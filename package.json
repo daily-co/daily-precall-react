@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@daily-co/daily-js": "^0.52.0",
-    "@daily-co/daily-react": "^0.12.0",
+    "@daily-co/daily-js": "^0.53.0",
+    "@daily-co/daily-react": "^0.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",

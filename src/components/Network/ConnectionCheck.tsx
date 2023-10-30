@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
+  DailyVideo,
   useDaily,
   useLocalSessionId,
-  useMediaTrack,
+  useVideoTrack,
 } from '@daily-co/daily-react';
 import { DailyConnectionQualityTestStats } from '@daily-co/daily-js';
 import { Link } from 'react-router-dom';
@@ -15,14 +16,18 @@ import { useTestData } from '../../hooks/useTestData';
 const TEST_DURATION = 15;
 export const ConnectionCheck: React.FC = () => {
   const localSessionId = useLocalSessionId();
-  const videoTrack = useMediaTrack(localSessionId, 'video');
+  const videoTrack = useVideoTrack(localSessionId);
   const callObject = useDaily();
   const [testRunning, setTestRunning] = useState(false);
 
   const { connectionTestData, setConnectionTestData } = useTestData();
 
   async function startTest() {
-    if (!callObject || !videoTrack.persistentTrack) {
+    if (
+      !callObject ||
+      !videoTrack.persistentTrack ||
+      videoTrack.state !== 'playable'
+    ) {
       logger.info('We need a video track and/or a call object to continue.');
       return;
     } else {
@@ -121,6 +126,17 @@ export const ConnectionCheck: React.FC = () => {
 
   return (
     <Card title="Connection quality check">
+      {' '}
+      {/* We need a hidden DailyVideo element here. When the local participant’s video track is unassigned
+			from a <video> element and cleaned up (which is what happens when we unmount the component when switching pages),
+			the video track changes to interrupted in the participant tracks object. We really want to keep a reference to this track,
+			because we need to pass it to the connection test.*/}
+      <DailyVideo
+        automirror
+        sessionId={localSessionId}
+        type="video"
+        style={{ display: 'none' }}
+      />
       <p>
         This is a test that sets up a RTCPeerConnection and measures a user's
         packet loss and round trip time. The longer the test runs, the more

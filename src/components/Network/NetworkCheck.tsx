@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   useDaily,
   useLocalSessionId,
-  useMediaTrack,
+  useVideoTrack,
+  DailyVideo,
 } from '@daily-co/daily-react';
 import { DailyNetworkConnectivityTestStats } from '@daily-co/daily-js';
 import { Link } from 'react-router-dom';
@@ -13,13 +14,17 @@ import { useTestData } from '../../hooks/useTestData';
 
 export const NetworkCheck: React.FC = () => {
   const localSessionId = useLocalSessionId();
-  const videoTrack = useMediaTrack(localSessionId, 'video');
+  const videoTrack = useVideoTrack(localSessionId);
   const callObject = useDaily();
   const { networkTestData, setNetworkTestData } = useTestData();
   const [testRunning, setTestRunning] = useState(false);
 
   async function startTest() {
-    if (!callObject || !videoTrack.persistentTrack) {
+    if (
+      !callObject ||
+      !videoTrack.persistentTrack ||
+      videoTrack.state !== 'playable'
+    ) {
       logger.info('We need a video track and/or a call object to continue.');
       return;
     } else {
@@ -78,6 +83,17 @@ export const NetworkCheck: React.FC = () => {
 
   return (
     <Card title="Network conditions check">
+      {/* We need a hidden DailyVideo element here. When the local participant’s video track is unassigned
+			from a <video> element and cleaned up (which is what happens when we unmount the component when switching pages),
+			the video track changes to interrupted in the participant tracks object. We really want to keep a reference to this track,
+			because we need to pass it to the network test.*/}
+      <DailyVideo
+        automirror
+        sessionId={localSessionId}
+        type="video"
+        style={{ display: 'none' }}
+      />
+
       <p>
         This test checks if the user's network allows them to talk other
         networks. It either passes or not. If it doesn't pass, we recommend
