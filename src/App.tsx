@@ -13,6 +13,7 @@ import { DailyLogo } from './components/shared/DailyLogo';
 export const App = () => {
   const [daily, setDaily] = useState<DailyCall | null>(null);
   const [browserInfo, setBrowserInfo] = useState<DailyBrowserInfo | null>(null);
+  const location = useLocation();
 
   useEffect(() => {
     if (daily) return;
@@ -35,8 +36,6 @@ export const App = () => {
       logger.warn('Browser is not supported. Not creating a call object.');
     }
   }, [daily]);
-
-  const location = useLocation();
 
   useEffect(() => {
     if (!daily || daily.isDestroyed()) return;
